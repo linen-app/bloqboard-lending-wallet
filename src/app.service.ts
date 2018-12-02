@@ -20,27 +20,59 @@ export class AppService {
         );
     }
 
-    async balance(tokenAddress: string): Promise<string> {
+    async getSupplyBalance(tokenAddress: string): Promise<string> {
         const res = await this.moneyMarketContract.getSupplyBalance(this.wallet.address, tokenAddress);
         return utils.formatUnits(res, this.DECIMALS);
     }
 
-    async supply(tokenAddress: string, rawAmount: string, needAwait: boolean): Promise<string> {
+    async getBorrowBalance(tokenAddress: string): Promise<string> {
+        const res = await this.moneyMarketContract.getBorrowBalance(this.wallet.address, tokenAddress);
+        return utils.formatUnits(res, this.DECIMALS);
+    }
+
+    async getAccountLiquidity(): Promise<string> {
+        const res = await this.moneyMarketContract.getAccountLiquidity(this.wallet.address);
+        return utils.formatUnits(res, this.DECIMALS);
+    }
+
+    async supply(tokenAddress: string, rawAmount: string, needAwaitMining: boolean): Promise<string> {
         const amount = utils.parseUnits(rawAmount, this.DECIMALS);
         const txObject = await this.moneyMarketContract.supply(tokenAddress, amount);
 
-        if (needAwait){
+        if (needAwaitMining){
             await txObject.wait();
         }
 
         return txObject.hash;
     }
 
-    async withdraw(tokenAddress: string, rawAmount: string, needAwait: boolean): Promise<string> {
+    async withdraw(tokenAddress: string, rawAmount: string, needAwaitMining: boolean): Promise<string> {
         const amount = utils.parseUnits(rawAmount, this.DECIMALS);
         const txObject = await this.moneyMarketContract.withdraw(tokenAddress, amount);
 
-        if (needAwait){
+        if (needAwaitMining){
+            await txObject.wait();
+        }
+
+        return txObject.hash;
+    }
+
+    async borrow(tokenAddress: string, rawAmount: string, needAwaitMining: boolean): Promise<string> {
+        const amount = utils.parseUnits(rawAmount, this.DECIMALS);
+        const txObject = await this.moneyMarketContract.borrow(tokenAddress, amount);
+
+        if (needAwaitMining){
+            await txObject.wait();
+        }
+
+        return txObject.hash;
+    }
+
+    async repayBorrow(tokenAddress: string, rawAmount: string, needAwaitMining: boolean): Promise<string> {
+        const amount = utils.parseUnits(rawAmount, this.DECIMALS);
+        const txObject = await this.moneyMarketContract.repayBorrow(tokenAddress, amount);
+
+        if (needAwaitMining){
             await txObject.wait();
         }
 
