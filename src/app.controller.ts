@@ -2,7 +2,7 @@ import { Get, Controller, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { TokenService } from './token.service';
 import { ApiImplicitQuery } from '@nestjs/swagger';
-import { TokenSymbol } from './token.entity';
+import { TokenSymbol } from './types';
 
 @Controller()
 export class AppController {
@@ -13,25 +13,33 @@ export class AppController {
 
     @Get('token-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    tokenBalance(@Query('token') token: TokenSymbol): Promise<string> {
-        return this.tokenService.getTokenBalance(token).then(x => x + ` ${token}\n`);
+    async tokenBalance(@Query('token') token: TokenSymbol): Promise<string> {
+        const rawBalance = await this.tokenService.getTokenBalance(token);
+        const result = this.tokenService.toHumanReadable(rawBalance, token);
+        return result + ` ${token}\n`;
     }
 
     @Get('supply-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    supplyBalance(@Query('token') token: TokenSymbol): Promise<string> {
-        return this.appService.getSupplyBalance(token).then(x => x + ` ${token}\n`);
+    async supplyBalance(@Query('token') token: TokenSymbol): Promise<string> {
+        const rawBalance = await this.appService.getSupplyBalance(token);
+        const result = this.tokenService.toHumanReadable(rawBalance, token);
+        return result + ` ${token}\n`;
     }
 
     @Get('borrow-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    borrowBalance(@Query('token') token: TokenSymbol): Promise<string> {
-        return this.appService.getBorrowBalance(token).then(x => x + ` ${token}\n`);
+    async borrowBalance(@Query('token') token: TokenSymbol): Promise<string> {
+        const rawBalance = await this.appService.getBorrowBalance(token);
+        const result = this.tokenService.toHumanReadable(rawBalance, token);
+        return result + ` ${token}\n`;
     }
 
     @Get('account-liquidity')
-    accountLiquidity(): Promise<string> {
-        return this.appService.getAccountLiquidity().then(x => x + ` ETH\n`);
+    async accountLiquidity(): Promise<string> {
+        const rawBalance = await this.appService.getAccountLiquidity();
+        const result = this.tokenService.toHumanReadable(rawBalance, TokenSymbol.WETH);
+        return result + ` ETH\n`;
     }
 
     @Post('supply')
@@ -41,7 +49,8 @@ export class AppController {
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        return this.appService.supply(token, amount, needAwaitMining).then(x => x + '\n');
+        const rawAmount = this.tokenService.fromHumanReadable(amount, token);
+        return this.appService.supply(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('withdraw')
@@ -51,7 +60,8 @@ export class AppController {
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        return this.appService.withdraw(token, amount, needAwaitMining).then(x => x + '\n');
+        const rawAmount = this.tokenService.fromHumanReadable(amount, token);
+        return this.appService.withdraw(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('borrow')
@@ -61,7 +71,8 @@ export class AppController {
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        return this.appService.borrow(token, amount, needAwaitMining).then(x => x + '\n');
+        const rawAmount = this.tokenService.fromHumanReadable(amount, token);
+        return this.appService.borrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('repay-borrow')
@@ -71,6 +82,7 @@ export class AppController {
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        return this.appService.repayBorrow(token, amount, needAwaitMining).then(x => x + '\n');
+        const rawAmount = this.tokenService.fromHumanReadable(amount, token);
+        return this.appService.repayBorrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 }

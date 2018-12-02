@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as ERC20 from '../resources/erc20.json';
 import { Wallet, Contract, utils } from 'ethers';
-import { TokenSymbol, TokenMetadata } from './token.entity';
+import { TokenSymbol, TokenMetadata, Amount, Address } from './types';
 
 @Injectable()
 export class TokenService {
@@ -19,11 +19,29 @@ export class TokenService {
         return this.tokens.map(x => (x.symbol as TokenSymbol));
     }
 
-    async getTokenBalance(symbol: TokenSymbol): Promise<string> {
+    fromHumanReadable(amount: string, symbol: TokenSymbol): Amount{
+        const token = this.getTokenBySymbol(symbol);
+        return utils.parseUnits(amount, token.decimals);
+    }
+
+    toHumanReadable(rawAmount: Amount, symbol: TokenSymbol): string{
+        const token = this.getTokenBySymbol(symbol);
+        return utils.formatUnits(rawAmount, token.decimals);
+    }
+
+    async getTokenBalance(symbol: TokenSymbol): Promise<Amount> {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
         const balance = await contract.balanceOf(this.wallet.address);
-        return utils.formatUnits(balance, token.decimals);
+        return balance;
+    }
+
+    async getAllowance(symbol: TokenSymbol, spender: Address): Promise<Amount> {
+        const token = this.getTokenBySymbol(symbol);
+        const contract = new Contract(token.address, ERC20.abi, this.wallet);
+
+        const allowance = await contract.allowance(this.wallet.address, spender);
+        return allowance;
     }
 }

@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers/utils';
+
 export enum TokenSymbol {
     ZRX = 'ZRX',
     BAT = 'BAT',
@@ -12,3 +14,7 @@ export class TokenMetadata {
     name: string;
     decimals: number;
 }
+
+export type Address = string;
+
+export type Amount = BigNumber;

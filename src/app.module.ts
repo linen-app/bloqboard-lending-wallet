@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokenService } from './token.service';
 import { ethers } from 'ethers';
-import { TokenMetadata } from './token.entity';
+import { TokenMetadata } from './types';
 
 const provider = ethers.getDefaultProvider('rinkeby');
 const privateKey = require('../resources/account.json').privateKey;
