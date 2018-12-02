@@ -1,5 +1,5 @@
 import { Get, Controller, Post, Query } from '@nestjs/common';
-import { AppService } from './app.service';
+import { CompoundService } from './compound.service';
 import { TokenService } from './token.service';
 import { ApiImplicitQuery } from '@nestjs/swagger';
 import { TokenSymbol } from './types';
@@ -7,7 +7,7 @@ import { TokenSymbol } from './types';
 @Controller()
 export class AppController {
     constructor(
-        private readonly appService: AppService,
+        private readonly compoundService: CompoundService,
         private readonly tokenService: TokenService,
     ) { }
 
@@ -22,7 +22,7 @@ export class AppController {
     @Get('supply-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
     async supplyBalance(@Query('token') token: TokenSymbol): Promise<string> {
-        const rawBalance = await this.appService.getSupplyBalance(token);
+        const rawBalance = await this.compoundService.getSupplyBalance(token);
         const result = this.tokenService.toHumanReadable(rawBalance, token);
         return result + ` ${token}\n`;
     }
@@ -30,14 +30,14 @@ export class AppController {
     @Get('borrow-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
     async borrowBalance(@Query('token') token: TokenSymbol): Promise<string> {
-        const rawBalance = await this.appService.getBorrowBalance(token);
+        const rawBalance = await this.compoundService.getBorrowBalance(token);
         const result = this.tokenService.toHumanReadable(rawBalance, token);
         return result + ` ${token}\n`;
     }
 
     @Get('account-liquidity')
     async accountLiquidity(): Promise<string> {
-        const rawBalance = await this.appService.getAccountLiquidity();
+        const rawBalance = await this.compoundService.getAccountLiquidity();
         const result = this.tokenService.toHumanReadable(rawBalance, TokenSymbol.WETH);
         return result + ` ETH\n`;
     }
@@ -50,7 +50,7 @@ export class AppController {
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.appService.supply(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.supply(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('withdraw')
@@ -61,7 +61,7 @@ export class AppController {
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.appService.withdraw(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.withdraw(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('borrow')
@@ -72,7 +72,7 @@ export class AppController {
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.appService.borrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.borrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('repay-borrow')
@@ -83,6 +83,6 @@ export class AppController {
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.appService.repayBorrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.repayBorrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
     }
 }

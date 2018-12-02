@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { CompoundService } from './compound.service';
 import { TokenService } from './token.service';
 import { ethers } from 'ethers';
 import { TokenMetadata } from './types';
@@ -23,6 +23,6 @@ const tokensProvider = {
 @Module({
     imports: [],
     controllers: [AppController],
-    providers: [AppService, TokenService, walletProvider, tokensProvider],
+    providers: [CompoundService, TokenService, walletProvider, tokensProvider],
 })
 export class AppModule { }

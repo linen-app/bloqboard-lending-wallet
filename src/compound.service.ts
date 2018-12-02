@@ -5,7 +5,7 @@ import { TokenSymbol, Amount } from './types';
 import * as Compound from '../resources/money-market.json';
 
 @Injectable()
-export class AppService {
+export class CompoundService {
 
     private readonly moneyMarketContract: Contract;
 
