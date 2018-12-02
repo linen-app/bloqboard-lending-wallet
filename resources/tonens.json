@@ -2,26 +2,31 @@
     {
         "address": "0x8de2f821bc97979b7171e7a6fe065b9e17f73b87",
         "symbol": "ZRX",
-        "name": "0x"
+        "name": "0x",
+        "decimals": 18
     },
     {
         "address": "0xbf7bbeef6c56e53f79de37ee9ef5b111335bd2ab",
         "symbol": "BAT",
-        "name": "Basic Attention Token"
+        "name": "Basic Attention Token",
+        "decimals": 18
     },
     {
         "address": "0x930b647320f738d92f5647b2e5c4458497ce3c95",
         "symbol": "REP",
-        "name": "Augur"
+        "name": "Augur",
+        "decimals": 18
     },
     {
-        "address": "0xc4375b7de8af5a38a93548eb8453a498222c4ff2",
+        "address": "0x4e17c87c52d0e9a0cad3fbc53b77d9514f003807",
         "symbol": "DAI",
-        "name": "Dai Stablecoin"
+        "name": "Dai Stablecoin",
+        "decimals": 18
     },
     {
         "address": "0xc778417e063141139fce010982780140aa0cd5ab",
         "symbol": "WETH",
-        "name": "Wrapped Ether"
+        "name": "Wrapped Ether",
+        "decimals": 18
     }
 ]

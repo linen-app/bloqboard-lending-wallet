@@ -2,21 +2,20 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TokenService } from './token.service';
+import { ethers } from 'ethers';
+import { TokenMetadata } from './token.entity';
 
-class TokenMetadata {
-    address: string;
-    symbol: string;
-    name: string;
-    decimals: number;
-}
+const provider = ethers.getDefaultProvider('rinkeby');
+const privateKey = require('../resources/account.json').privateKey;
+const wallet = new ethers.Wallet(privateKey, provider);
 
-const privateKeyProvider = {
-    provide: 'private-key',
-    useValue: require('../resources/account.json').privateKey,
+const walletProvider = {
+    provide: 'wallet',
+    useValue: wallet,
 };
 
 const tokens: TokenMetadata[] = require('../resources/tonens.json');
-const tolensProvider = {
+const tokensProvider = {
     provide: 'tokens',
     useValue: tokens,
 };
@@ -24,6 +23,6 @@ const tolensProvider = {
 @Module({
     imports: [],
     controllers: [AppController],
-    providers: [AppService, TokenService, privateKeyProvider, tolensProvider],
+    providers: [AppService, TokenService, walletProvider, tokensProvider],
 })
 export class AppModule { }

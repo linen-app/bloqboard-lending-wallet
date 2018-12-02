@@ -2,6 +2,7 @@ import { Get, Controller, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { TokenService } from './token.service';
 import { ApiImplicitQuery } from '@nestjs/swagger';
+import { TokenSymbol } from './token.entity';
 
 @Controller()
 export class AppController {
@@ -10,18 +11,22 @@ export class AppController {
         private readonly tokenService: TokenService,
     ) { }
 
+    @Get('token-balance')
+    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    tokenBalance(@Query('token') token: TokenSymbol): Promise<string> {
+        return this.tokenService.getTokenBalance(token).then(x => x + ` ${token}\n`);
+    }
+
     @Get('supply-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    supplyBalance(@Query('token') token: string): Promise<string> {
-        const tokenMetadata = this.tokenService.getTokenBySymbol(token);
-        return this.appService.getSupplyBalance(tokenMetadata.address).then(x => x + ` ${token}\n`);
+    supplyBalance(@Query('token') token: TokenSymbol): Promise<string> {
+        return this.appService.getSupplyBalance(token).then(x => x + ` ${token}\n`);
     }
 
     @Get('borrow-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    borrowBalance(@Query('token') token: string): Promise<string> {
-        const tokenMetadata = this.tokenService.getTokenBySymbol(token);
-        return this.appService.getBorrowBalance(tokenMetadata.address).then(x => x + ` ${token}\n`);
+    borrowBalance(@Query('token') token: TokenSymbol): Promise<string> {
+        return this.appService.getBorrowBalance(token).then(x => x + ` ${token}\n`);
     }
 
     @Get('account-liquidity')
@@ -32,44 +37,40 @@ export class AppController {
     @Post('supply')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
     supply(
-        @Query('token') token: string,
+        @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        const tokenMetadata = this.tokenService.getTokenBySymbol(token);
-        return this.appService.supply(tokenMetadata.address, amount, needAwaitMining).then(x => x + '\n');
+        return this.appService.supply(token, amount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('withdraw')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
     withdraw(
-        @Query('token') token: string,
+        @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        const tokenMetadata = this.tokenService.getTokenBySymbol(token);
-        return this.appService.withdraw(tokenMetadata.address, amount, needAwaitMining).then(x => x + '\n');
+        return this.appService.withdraw(token, amount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('borrow')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
     borrow(
-        @Query('token') token: string,
+        @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        const tokenMetadata = this.tokenService.getTokenBySymbol(token);
-        return this.appService.borrow(tokenMetadata.address, amount, needAwaitMining).then(x => x + '\n');
+        return this.appService.borrow(token, amount, needAwaitMining).then(x => x + '\n');
     }
 
     @Post('repay-borrow')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
     repayBorrow(
-        @Query('token') token: string,
+        @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
         @Query('needAwaitMining') needAwaitMining: boolean = false,
     ): Promise<string> {
-        const tokenMetadata = this.tokenService.getTokenBySymbol(token);
-        return this.appService.repayBorrow(tokenMetadata.address, amount, needAwaitMining).then(x => x + '\n');
+        return this.appService.repayBorrow(token, amount, needAwaitMining).then(x => x + '\n');
     }
 }
