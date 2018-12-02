@@ -12,7 +12,10 @@ export class TokenService {
     constructor(@Inject('tokens') private readonly tokens: TokenMetadata[]) { }
 
     getTokenBySymbol(symbol: string) {
-        const res = this.tokens.find(x => x.symbol === symbol);
-        return res;
+        return this.tokens.find(x => x.symbol === symbol);
+    }
+
+    getTokenSymbols() {
+        return this.tokens.map(x => x.symbol);
     }
 }

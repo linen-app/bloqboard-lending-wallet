@@ -21,6 +21,7 @@
   "dependencies": {
     "@nestjs/common": "^5.4.0",
     "@nestjs/core": "^5.4.0",
+    "@nestjs/swagger": "^2.5.1",
     "ethers": "^4.0.15",
     "reflect-metadata": "^0.1.12",
     "rimraf": "^2.6.2",
