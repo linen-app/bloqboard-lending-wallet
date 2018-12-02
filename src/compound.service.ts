@@ -39,13 +39,15 @@ export class CompoundService {
 
     async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const txObject = await this.moneyMarketContract.supply(token.address, rawAmount);
+        const unlockTx = await this.tokenService.unlockToken(symbol, Compound.networks[4].address);
+        const supplyTx = await this.moneyMarketContract.supply(token.address, rawAmount, {nonce: unlockTx.nonce + 1});
 
         if (needAwaitMining){
-            await txObject.wait();
+            await unlockTx.wait();
+            await supplyTx.wait();
         }
 
-        return txObject.hash;
+        return unlockTx.hash + '\n' + supplyTx.hash;
     }
 
     async withdraw(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
@@ -72,12 +74,14 @@ export class CompoundService {
 
     async repayBorrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const txObject = await this.moneyMarketContract.repayBorrow(token.address, rawAmount);
+        const unlockTx = await this.tokenService.unlockToken(symbol, Compound.networks[4].address);
+        const repayTx = await this.moneyMarketContract.repayBorrow(token.address, rawAmount, {nonce: unlockTx.nonce + 1});
 
         if (needAwaitMining){
-            await txObject.wait();
+            await unlockTx.wait();
+            await repayTx.wait();
         }
 
-        return txObject.hash;
+        return unlockTx.hash + '\n' + repayTx.hash;
     }
 }
