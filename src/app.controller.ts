@@ -47,10 +47,10 @@ export class AppController {
     supply(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: boolean = false,
+        @Query('needAwaitMining') needAwaitMining: string = 'false',
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.supply(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.supply(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
     }
 
     @Post('withdraw')
@@ -58,10 +58,10 @@ export class AppController {
     withdraw(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: boolean = false,
+        @Query('needAwaitMining') needAwaitMining: string = 'false',
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.withdraw(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.withdraw(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
     }
 
     @Post('borrow')
@@ -69,10 +69,10 @@ export class AppController {
     borrow(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: boolean = false,
+        @Query('needAwaitMining') needAwaitMining: string = 'false',
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.borrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.borrow(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
     }
 
     @Post('repay-borrow')
@@ -80,9 +80,9 @@ export class AppController {
     repayBorrow(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: boolean = false,
+        @Query('needAwaitMining') needAwaitMining: string = 'false',
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.repayBorrow(token, rawAmount, needAwaitMining).then(x => x + '\n');
+        return this.compoundService.repayBorrow(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
     }
 }
