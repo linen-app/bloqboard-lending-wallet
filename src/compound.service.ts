@@ -1,24 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ethers, Contract, Wallet, utils } from 'ethers';
+import { Contract, Wallet } from 'ethers';
 import { TokenService } from './token.service';
 import { TokenSymbol, Amount } from './types';
-import * as Compound from '../resources/money-market.json';
 
 @Injectable()
 export class CompoundService {
 
-    private readonly moneyMarketContract: Contract;
-
     constructor(
         @Inject('wallet') private readonly wallet: Wallet,
         private readonly tokenService: TokenService,
-    ) {
-        this.moneyMarketContract = new ethers.Contract(
-            Compound.networks[4].address,
-            Compound.abi,
-            wallet,
-        );
-    }
+        @Inject('money-market-contract') private readonly moneyMarketContract: Contract,
+    ) { }
 
     async getSupplyBalance(symbol: TokenSymbol): Promise<Amount> {
         const token = this.tokenService.getTokenBySymbol(symbol);
@@ -39,10 +31,14 @@ export class CompoundService {
 
     async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const unlockTx = await this.tokenService.unlockToken(symbol, Compound.networks[4].address);
-        const supplyTx = await this.moneyMarketContract.supply(token.address, rawAmount, {nonce: unlockTx.nonce + 1});
+        const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        const supplyTx = await this.moneyMarketContract.supply(
+            token.address,
+            rawAmount,
+            { nonce: unlockTx.nonce + 1, gasLimit: 120000 },
+        );
 
-        if (needAwaitMining){
+        if (needAwaitMining) {
             await unlockTx.wait();
             await supplyTx.wait();
         }
@@ -54,7 +50,7 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const txObject = await this.moneyMarketContract.withdraw(token.address, rawAmount);
 
-        if (needAwaitMining){
+        if (needAwaitMining) {
             await txObject.wait();
         }
 
@@ -65,7 +61,7 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const txObject = await this.moneyMarketContract.borrow(token.address, rawAmount);
 
-        if (needAwaitMining){
+        if (needAwaitMining) {
             await txObject.wait();
         }
 
@@ -74,10 +70,14 @@ export class CompoundService {
 
     async repayBorrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const unlockTx = await this.tokenService.unlockToken(symbol, Compound.networks[4].address);
-        const repayTx = await this.moneyMarketContract.repayBorrow(token.address, rawAmount, {nonce: unlockTx.nonce + 1});
+        const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        const repayTx = await this.moneyMarketContract.repayBorrow(
+            token.address,
+            rawAmount,
+            { nonce: unlockTx.nonce + 1, gasLimit: 120000 },
+        );
 
-        if (needAwaitMining){
+        if (needAwaitMining) {
             await unlockTx.wait();
             await repayTx.wait();
         }

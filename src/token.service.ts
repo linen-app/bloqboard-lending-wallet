@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import * as ERC20 from '../resources/erc20.json';
 import { Wallet, Contract, utils, ContractTransaction } from 'ethers';
 import { TokenSymbol, TokenMetadata, Amount, Address } from './types';
+import { BigNumber } from 'ethers/utils';
 
 @Injectable()
 export class TokenService {
@@ -37,12 +38,12 @@ export class TokenService {
         return balance;
     }
 
-    async getAllowance(symbol: TokenSymbol, spender: Address): Promise<Amount> {
+    async isTokenLockedForSpender(symbol: TokenSymbol, spender: Address): Promise<boolean> {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const allowance = await contract.allowance(this.wallet.address, spender);
-        return allowance;
+        const allowance: BigNumber = await contract.allowance(this.wallet.address, spender);
+        return allowance.eq(0);
     }
 
     async unlockToken(symbol: TokenSymbol, spender: Address): Promise<ContractTransaction> {
@@ -51,6 +52,15 @@ export class TokenService {
 
         const maxUint256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
         const tx: ContractTransaction = await contract.approve(spender, maxUint256);
+
+        return tx;
+    }
+
+    async lockToken(symbol: TokenSymbol, spender: Address): Promise<ContractTransaction> {
+        const token = this.getTokenBySymbol(symbol);
+        const contract = new Contract(token.address, ERC20.abi, this.wallet);
+
+        const tx: ContractTransaction = await contract.approve(spender, 0);
 
         return tx;
     }
