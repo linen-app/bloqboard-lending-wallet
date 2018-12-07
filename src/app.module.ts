@@ -5,9 +5,11 @@ import { TokenService } from './token.service';
 import { ethers } from 'ethers';
 import { TokenMetadata } from './types';
 import * as Compound from '../resources/money-market.json';
+import * as Account from '../resources/account.json';
+import * as Tokens from '../resources/tokens.json';
 
 const provider = ethers.getDefaultProvider('rinkeby');
-const privateKey = require('../resources/account.json').privateKey;
+const privateKey = Account.privateKey;
 const wallet = new ethers.Wallet(privateKey, provider);
 
 const moneyMarketContract = new ethers.Contract(
@@ -25,7 +27,7 @@ const walletProvider = {
     useValue: wallet,
 };
 
-const tokens: TokenMetadata[] = require('../resources/tokens.json');
+const tokens: TokenMetadata[] = Tokens;
 const tokensProvider = {
     provide: 'tokens',
     useValue: tokens,
