@@ -1,24 +1,82 @@
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+import { ethers, Contract } from 'ethers';
+import { TokenMetadata, TokenSymbol } from '../src/types';
+import { CompoundService } from '../src/compound.service';
+import { AppController } from '../src/app.controller';
+import { TokenService } from '../src/token.service';
+import * as Compound from '../resources/money-market.json';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication;
+describe('Compound API (e2e)', () => {
+    let app: INestApplication;
+    let moduleFixture: TestingModule;
 
-  beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    beforeAll(async () => {
+        jest.setTimeout(120000);
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+        const provider = ethers.getDefaultProvider('rinkeby');
+        const privateKey = require('../resources/account.json').privateKey;
+        const wallet = new ethers.Wallet(privateKey, provider);
+        const walletProvider = {
+            provide: 'wallet',
+            useValue: wallet,
+        };
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
+        const moneyMarketContract = new ethers.Contract(
+            Compound.networks[4].address,
+            Compound.abi,
+            wallet,
+        );
+        const moneyMarketContractProvider = {
+            provide: 'money-market-contract',
+            useValue: moneyMarketContract,
+        };
+
+        const tokens: TokenMetadata[] = require('../resources/tokens.json');
+        const tokensProvider = {
+            provide: 'tokens',
+            useValue: tokens,
+        };
+
+        moduleFixture = await Test.createTestingModule({
+            controllers: [AppController],
+            providers: [
+                CompoundService,
+                TokenService,
+                walletProvider,
+                tokensProvider,
+                moneyMarketContractProvider,
+            ],
+        }).compile();
+
+        app = moduleFixture.createNestApplication();
+        await app.init();
+    });
+
+    it('/token-balance (GET)', () => {
+        return request(app.getHttpServer())
+            .get('/token-balance?token=WETH')
+            .expect(200)
+            .expect(/[0-9]*\.?[0-9]+ WETH/);
+    });
+
+    it('/supply (POST)', async () => {
+        const tokenService = moduleFixture.get<TokenService>(TokenService);
+        const moneyMarketContract = moduleFixture.get<Contract>('money-market-contract');
+
+        const lockTx = await tokenService.lockToken(TokenSymbol.WETH, moneyMarketContract.address);
+
+        await lockTx.wait();
+
+        return request(app.getHttpServer())
+            .post('/supply?token=WETH&amount=0.0001&needAwaitMining=true')
+            .expect(201);
+    });
+
+    it('/withdraw (POST)', async () => {
+        return request(app.getHttpServer())
+            .post('/withdraw?token=WETH&amount=0.0001&needAwaitMining=true')
+            .expect(201);
+    });
 });
