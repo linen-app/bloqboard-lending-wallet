@@ -5,10 +5,11 @@ Bloqboard provides sophisticated cryptocurrency traders access to peer-to-peer a
 
 Currently, only Rinkeby testnet is supported. Mainnet support will be added once we ensure that Bloqboard Wallet is stable enough for production usage.
 
-## Prerequisities
-1. [Create an Ethereum account](https://www.myetherwallet.com/) or use existing.
-2. Transfer some tokens to this account. Currently supported tokens: WETH, DAI, ZRX, REP and BAT
-3. Extract private key from your Ethereum account. This can be done on myetherwallet.com for example.
+## Prerequisites
+1. Install Node.js on your machine (tested with v8.10.0)
+2. [Create an Ethereum account](https://www.myetherwallet.com/) or use existing.
+3. Transfer some tokens to this account. Currently supported tokens: WETH, DAI, ZRX, REP and BAT
+4. Extract private key from your Ethereum account. This can be done on myetherwallet.com for example.
 
 ## Installation
 
