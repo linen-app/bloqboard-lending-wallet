@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Contract, Wallet } from 'ethers';
+import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { TokenService } from './token.service';
-import { TokenSymbol, Amount } from './types';
+import { TokenSymbol, Amount, TransactionLogResponse } from './types';
 
 @Injectable()
 export class CompoundService {
@@ -29,10 +29,10 @@ export class CompoundService {
         return res;
     }
 
-    async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
+    async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
-        const supplyTx = await this.moneyMarketContract.supply(
+        const unlockTx: ContractTransaction = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
             token.address,
             rawAmount,
             { nonce: unlockTx.nonce + 1, gasLimit: 120000 },
@@ -43,35 +43,53 @@ export class CompoundService {
             await supplyTx.wait();
         }
 
-        return unlockTx.hash + '\n' + supplyTx.hash;
+        return {
+            transactions: [{
+                name: 'unlock',
+                transactionObject: unlockTx,
+            }, {
+                name: 'supply',
+                transactionObject: supplyTx,
+            }],
+        };
     }
 
-    async withdraw(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
+    async withdraw(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const txObject = await this.moneyMarketContract.withdraw(token.address, rawAmount);
+        const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(token.address, rawAmount);
 
         if (needAwaitMining) {
             await txObject.wait();
         }
 
-        return txObject.hash;
+        return {
+            transactions: [{
+                name: 'withdraw',
+                transactionObject: txObject,
+            }],
+        };
     }
 
-    async borrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
+    async borrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const txObject = await this.moneyMarketContract.borrow(token.address, rawAmount);
+        const txObject: ContractTransaction = await this.moneyMarketContract.borrow(token.address, rawAmount);
 
         if (needAwaitMining) {
             await txObject.wait();
         }
 
-        return txObject.hash;
+        return {
+            transactions: [{
+                name: 'borrow',
+                transactionObject: txObject,
+            }],
+        };
     }
 
-    async repayBorrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<string> {
+    async repayBorrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
-        const repayTx = await this.moneyMarketContract.repayBorrow(
+        const unlockTx: ContractTransaction = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
             token.address,
             rawAmount,
             { nonce: unlockTx.nonce + 1, gasLimit: 120000 },
@@ -82,6 +100,14 @@ export class CompoundService {
             await repayTx.wait();
         }
 
-        return unlockTx.hash + '\n' + repayTx.hash;
+        return {
+            transactions: [{
+                name: 'unlock',
+                transactionObject: unlockTx,
+            }, {
+                name: 'repayBorrow',
+                transactionObject: repayTx,
+            }],
+        };
     }
 }

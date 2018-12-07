@@ -58,7 +58,12 @@ describe('Compound API (e2e)', () => {
         return request(app.getHttpServer())
             .get('/token-balance?token=WETH')
             .expect(200)
-            .expect(/[0-9]*\.?[0-9]+ WETH/);
+            .expect(res => {
+                if (!('token' in res.body)) throw new Error('missing token key');
+                if (!('amount' in res.body)) throw new Error('missing amount key');
+                const isMatch = /[0-9]*\.?[0-9]+/.test(res.body.amount);
+                if (!isMatch) throw new Error(`Is not numeric value: ${res.body.amount}`);
+            });
     });
 
     it('/supply (POST)', async () => {

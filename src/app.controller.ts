@@ -1,8 +1,9 @@
-import { Get, Controller, Post, Query } from '@nestjs/common';
+import { Get, Controller, Post, Query, Res, HttpStatus } from '@nestjs/common';
 import { CompoundService } from './compound.service';
 import { TokenService } from './token.service';
 import { ApiImplicitQuery } from '@nestjs/swagger';
 import { TokenSymbol } from './types';
+import { ParseBooleanPipe } from './parseBoolean.pipe';
 
 @Controller()
 export class AppController {
@@ -13,76 +14,84 @@ export class AppController {
 
     @Get('token-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    async tokenBalance(@Query('token') token: TokenSymbol): Promise<string> {
+    async tokenBalance(@Query('token') token: TokenSymbol): Promise<any> {
         const rawBalance = await this.tokenService.getTokenBalance(token);
         const result = this.tokenService.toHumanReadable(rawBalance, token);
-        return result + ` ${token}\n`;
+        return { amount: result, token };
     }
 
     @Get('supply-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    async supplyBalance(@Query('token') token: TokenSymbol): Promise<string> {
+    async supplyBalance(@Query('token') token: TokenSymbol): Promise<any> {
         const rawBalance = await this.compoundService.getSupplyBalance(token);
         const result = this.tokenService.toHumanReadable(rawBalance, token);
-        return result + ` ${token}\n`;
+        return { amount: result, token };
     }
 
     @Get('borrow-balance')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    async borrowBalance(@Query('token') token: TokenSymbol): Promise<string> {
+    async borrowBalance(@Query('token') token: TokenSymbol): Promise<any> {
         const rawBalance = await this.compoundService.getBorrowBalance(token);
         const result = this.tokenService.toHumanReadable(rawBalance, token);
-        return result + ` ${token}\n`;
+        return { amount: result, token };
     }
 
     @Get('account-liquidity')
-    async accountLiquidity(): Promise<string> {
+    async accountLiquidity(): Promise<any> {
         const rawBalance = await this.compoundService.getAccountLiquidity();
         const result = this.tokenService.toHumanReadable(rawBalance, TokenSymbol.WETH);
-        return result + ` ETH\n`;
+        return { amount: result, token: 'ETH' };
     }
 
     @Post('supply')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    supply(
+    async supply(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: string = 'false',
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Res() res,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.supply(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
+        const result = await this.compoundService.supply(token, rawAmount, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
     }
 
     @Post('withdraw')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    withdraw(
+    async withdraw(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: string = 'false',
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Res() res,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.withdraw(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
+        const result = await this.compoundService.withdraw(token, rawAmount, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
     }
 
     @Post('borrow')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    borrow(
+    async borrow(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: string = 'false',
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Res() res,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.borrow(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
+        const result = await this.compoundService.borrow(token, rawAmount, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
     }
 
     @Post('repay-borrow')
     @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
-    repayBorrow(
+    async repayBorrow(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
-        @Query('needAwaitMining') needAwaitMining: string = 'false',
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Res() res,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        return this.compoundService.repayBorrow(token, rawAmount, JSON.parse(needAwaitMining)).then(x => x + '\n');
+        const result = await this.compoundService.repayBorrow(token, rawAmount, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
     }
 }
