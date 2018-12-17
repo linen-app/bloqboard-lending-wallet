@@ -4,6 +4,8 @@ import { Wallet, Contract, utils, ContractTransaction } from 'ethers';
 import { TokenSymbol, TokenMetadata, Amount, Address } from './types';
 import { BigNumber } from 'ethers/utils';
 
+const maxUint256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+
 @Injectable()
 export class TokenService {
 
@@ -20,12 +22,16 @@ export class TokenService {
         return this.tokens.map(x => (x.symbol as TokenSymbol));
     }
 
-    fromHumanReadable(amount: string, symbol: TokenSymbol): Amount{
+    fromHumanReadable(amount: string, symbol: TokenSymbol): Amount {
+        if (amount === '-1') {
+            return new BigNumber(maxUint256);
+        }
+
         const token = this.getTokenBySymbol(symbol);
         return utils.parseUnits(amount, token.decimals);
     }
 
-    toHumanReadable(rawAmount: Amount, symbol: TokenSymbol): string{
+    toHumanReadable(rawAmount: Amount, symbol: TokenSymbol): string {
         const token = this.getTokenBySymbol(symbol);
         return utils.formatUnits(rawAmount, token.decimals);
     }
@@ -50,7 +56,6 @@ export class TokenService {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const maxUint256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
         const tx: ContractTransaction = await contract.approve(spender, maxUint256);
 
         return tx;
