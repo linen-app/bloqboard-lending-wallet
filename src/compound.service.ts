@@ -35,7 +35,7 @@ export class CompoundService {
         const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
             token.address,
             rawAmount,
-            { nonce: unlockTx.nonce + 1, gasLimit: 120000 },
+            { nonce: unlockTx.nonce + 1, gasLimit: 300000 },
         );
 
         if (needAwaitMining) {
@@ -92,7 +92,7 @@ export class CompoundService {
         const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
             token.address,
             rawAmount,
-            { nonce: unlockTx.nonce + 1, gasLimit: 120000 },
+            { nonce: unlockTx.nonce + 1, gasLimit: 300000 },
         );
 
         if (needAwaitMining) {
