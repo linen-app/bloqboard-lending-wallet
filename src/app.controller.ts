@@ -5,6 +5,8 @@ import { ApiImplicitQuery } from '@nestjs/swagger';
 import { TokenSymbol } from './types';
 import { ParseBooleanPipe } from './parseBoolean.pipe';
 
+const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
+
 @Controller()
 export class AppController {
     constructor(
@@ -13,27 +15,42 @@ export class AppController {
     ) { }
 
     @Get('token-balance')
-    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false })
     async tokenBalance(@Query('token') token: TokenSymbol): Promise<any> {
-        const rawBalance = await this.tokenService.getTokenBalance(token);
-        const result = this.tokenService.toHumanReadable(rawBalance, token);
-        return { amount: result, token };
+        const tokens = token ? [token] : supportedTokens;
+        const result = {};
+        for (const t of tokens) {
+            const rawBalance = await this.tokenService.getTokenBalance(t);
+            const balance = this.tokenService.toHumanReadable(rawBalance, t);
+            result[t] = balance;
+        }
+        return result;
     }
 
     @Get('supply-balance')
-    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false })
     async supplyBalance(@Query('token') token: TokenSymbol): Promise<any> {
-        const rawBalance = await this.compoundService.getSupplyBalance(token);
-        const result = this.tokenService.toHumanReadable(rawBalance, token);
-        return { amount: result, token };
+        const tokens = token ? [token] : supportedTokens;
+        const result = {};
+        for (const t of tokens) {
+            const rawBalance = await this.compoundService.getSupplyBalance(t);
+            const balance = this.tokenService.toHumanReadable(rawBalance, t);
+            result[t] = balance;
+        }
+        return result;
     }
 
     @Get('borrow-balance')
-    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false })
     async borrowBalance(@Query('token') token: TokenSymbol): Promise<any> {
-        const rawBalance = await this.compoundService.getBorrowBalance(token);
-        const result = this.tokenService.toHumanReadable(rawBalance, token);
-        return { amount: result, token };
+        const tokens = token ? [token] : supportedTokens;
+        const result = {};
+        for (const t of tokens) {
+            const rawBalance = await this.compoundService.getBorrowBalance(t);
+            const balance = this.tokenService.toHumanReadable(rawBalance, t);
+            result[t] = balance;
+        }
+        return result;
     }
 
     @Get('account-liquidity')
@@ -44,7 +61,7 @@ export class AppController {
     }
 
     @Post('supply')
-    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async supply(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
@@ -57,7 +74,7 @@ export class AppController {
     }
 
     @Post('withdraw')
-    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async withdraw(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
@@ -70,7 +87,7 @@ export class AppController {
     }
 
     @Post('borrow')
-    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async borrow(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
@@ -83,7 +100,7 @@ export class AppController {
     }
 
     @Post('repay-borrow')
-    @ApiImplicitQuery({ name: 'token', enum: ['WETH', 'DAI', 'ZRX', 'REP', 'BAT'] })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async repayBorrow(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
