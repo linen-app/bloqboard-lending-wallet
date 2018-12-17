@@ -31,27 +31,38 @@ export class CompoundService {
 
     async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const unlockTx: ContractTransaction = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        let unlockTx: ContractTransaction = null;
+
+        if (await this.tokenService.isTokenLockedForSpender(symbol, this.moneyMarketContract.address)) {
+            unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        }
+
         const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
             token.address,
             rawAmount,
-            { nonce: unlockTx.nonce + 1, gasLimit: 300000 },
+            { nonce: unlockTx && unlockTx.nonce + 1, gasLimit: 300000 },
         );
 
         if (needAwaitMining) {
-            await unlockTx.wait();
+            if (unlockTx) await unlockTx.wait();
             await supplyTx.wait();
         }
 
-        return {
+        const result = {
             transactions: [{
-                name: 'unlock',
-                transactionObject: unlockTx,
-            }, {
                 name: 'supply',
                 transactionObject: supplyTx,
             }],
         };
+
+        if (unlockTx) {
+            result.transactions.push({
+                name: 'unlock',
+                transactionObject: unlockTx,
+            });
+        }
+
+        return result;
     }
 
     async withdraw(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
@@ -88,26 +99,37 @@ export class CompoundService {
 
     async repayBorrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const unlockTx: ContractTransaction = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        let unlockTx: ContractTransaction = null;
+
+        if (await this.tokenService.isTokenLockedForSpender(symbol, this.moneyMarketContract.address)) {
+            unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+        }
+
         const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
             token.address,
             rawAmount,
-            { nonce: unlockTx.nonce + 1, gasLimit: 300000 },
+            { nonce: unlockTx && unlockTx.nonce + 1, gasLimit: 300000 },
         );
 
         if (needAwaitMining) {
-            await unlockTx.wait();
+            if (unlockTx) await unlockTx.wait();
             await repayTx.wait();
         }
 
-        return {
+        const result = {
             transactions: [{
-                name: 'unlock',
-                transactionObject: unlockTx,
-            }, {
                 name: 'repayBorrow',
                 transactionObject: repayTx,
             }],
         };
+
+        if (unlockTx) {
+            result.transactions.push({
+                name: 'unlock',
+                transactionObject: unlockTx,
+            });
+        }
+
+        return result;
     }
 }
