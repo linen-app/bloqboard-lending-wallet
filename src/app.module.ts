@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, Inject } from '@nestjs/common';
+import { WinstonModule } from 'nest-winston';
 import { CompoundController } from './compound/compound.controller';
 import { CompoundService } from './compound/compound.service';
 import { TokenService } from './token.service';
@@ -10,6 +11,8 @@ import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
+import winston = require('winston');
+import { format } from 'winston';
 
 const NETWORK = process.env.NETWORK || 'rinkeby';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -28,10 +31,21 @@ const kyberContract = new ethers.Contract(
 );
 
 const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
-console.log('NETWORK', NETWORK);
 
 @Module({
-    imports: [],
+    imports: [
+        WinstonModule.forRoot({
+            transports: [
+                new winston.transports.Console({
+                    format: format.combine(
+                        format.colorize(),
+                        format.timestamp(),
+                        format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
+                    ),
+                }),
+            ],
+        }),
+    ],
     controllers: [CompoundController, KyberController],
     providers: [
         CompoundService,
@@ -55,4 +69,10 @@ console.log('NETWORK', NETWORK);
         },
     ],
 })
-export class AppModule { }
+export class AppModule {
+    constructor(
+        @Inject('winston') private readonly logger: winston.Logger,
+    ) {
+        logger.info(`Application started with ${NETWORK} network`);
+    }
+}

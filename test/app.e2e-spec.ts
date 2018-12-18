@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { WinstonModule } from 'nest-winston';
 import * as request from 'supertest';
 import { ethers, Contract, utils } from 'ethers';
 import { TokenMetadata, TokenSymbol } from '../src/types';
@@ -9,6 +10,8 @@ import { CompoundController } from '../src/compound/compound.controller';
 import { TokenService } from '../src/token.service';
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
+import winston = require('winston');
+import { format } from 'winston';
 
 describe('Compound API (e2e)', () => {
     let app: INestApplication;
@@ -36,6 +39,17 @@ describe('Compound API (e2e)', () => {
         const tokens: TokenMetadata[] = require('../resources/tokens.json').networks[NETWORK];
 
         moduleFixture = await Test.createTestingModule({
+            imports: [WinstonModule.forRoot({
+                transports: [
+                    new winston.transports.Console({
+                        format: format.combine(
+                            format.colorize(),
+                            format.timestamp(),
+                            format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
+                        ),
+                    }),
+                ],
+            })],
             controllers: [CompoundController],
             providers: [
                 CompoundService,

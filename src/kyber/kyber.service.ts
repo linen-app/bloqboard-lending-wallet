@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { Logger } from 'winston';
 import { Contract, Wallet, ethers, utils } from 'ethers';
 import { TokenService } from '../token.service';
 import { TokenSymbol, Amount, TokenMetadata } from '../types';
@@ -11,6 +12,7 @@ export class KyberService {
     constructor(
         @Inject('wallet') private readonly wallet: Wallet,
         private readonly tokenService: TokenService,
+        @Inject('winston') private readonly logger: Logger,
         @Inject('kyber-contract') private readonly kyberContract: Contract,
     ) { }
 
@@ -66,8 +68,8 @@ export class KyberService {
     ) {
         const response = await this.kyberContract.getExpectedRate(tokenToBuy.address, tokenToSell.address, rawAmountToBuy);
         const amountToSell = rawAmountToBuy.mul(response.slippageRate).div(PRECISION);
-        console.log('calcApproximateAmountToSell:rate', utils.formatEther(response.slippageRate));
-        console.log('calcApproximateAmountToSell', utils.formatEther(amountToSell));
+        this.logger.info(`calcApproximateAmountToSell rate: ${utils.formatEther(response.slippageRate)}`);
+        this.logger.info(`calcApproximateAmountToSell: ${utils.formatEther(amountToSell)}`);
 
         return amountToSell;
     }
@@ -80,8 +82,8 @@ export class KyberService {
     ) {
         const response = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, approximateAmountToSell);
         const amountToSell = amountToBuy.mul(PRECISION).div(response.slippageRate);
-        console.log('calcAmountToSell:rate', utils.formatEther(response.slippageRate));
-        console.log('calcAmountToSell', utils.formatEther(amountToSell));
+        this.logger.info(`calcAmountToSell rate: ${utils.formatEther(response.slippageRate)}`);
+        this.logger.info(`calcAmountToSell: ${utils.formatEther(amountToSell)}`);
 
         return { amountToSell, rate: response.slippageRate };
     }

@@ -3,6 +3,7 @@ import * as ERC20 from '../resources/erc20.json';
 import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
 import { TokenSymbol, TokenMetadata, Amount, Address } from './types';
 import { BigNumber } from 'ethers/utils';
+import { Logger } from 'winston';
 
 @Injectable()
 export class TokenService {
@@ -10,6 +11,7 @@ export class TokenService {
     constructor(
         @Inject('tokens') private readonly tokens: TokenMetadata[],
         @Inject('wallet') private readonly wallet: Wallet,
+        @Inject('winston') private readonly logger: Logger,
     ) { }
 
     getTokenBySymbol(symbol: TokenSymbol): TokenMetadata {
@@ -56,6 +58,8 @@ export class TokenService {
 
         const tx: ContractTransaction = await contract.approve(spender, ethers.constants.MaxUint256, { nonce });
 
+        this.logger.info(`Unlocking ${symbol} for spender: ${spender}`);
+
         return tx;
     }
 
@@ -64,6 +68,8 @@ export class TokenService {
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
         const tx: ContractTransaction = await contract.approve(spender, 0);
+
+        this.logger.info(`Locking ${symbol} for spender: ${spender}`);
 
         return tx;
     }
