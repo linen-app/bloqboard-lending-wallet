@@ -11,22 +11,24 @@ import * as Kyber from '../resources/kyber-network-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
 
-const provider = ethers.getDefaultProvider('rinkeby');
+const NETWORK = process.env.NETWORK || 'rinkeby';
+const provider = ethers.getDefaultProvider(NETWORK);
 const privateKey = Account.privateKey;
 const wallet = new ethers.Wallet(privateKey, provider);
 
 const moneyMarketContract = new ethers.Contract(
-    Compound.networks[4].address,
+    Compound.networks[NETWORK].address,
     Compound.abi,
     wallet,
 );
 const kyberContract = new ethers.Contract(
-    Kyber.networks[4].address,
+    Kyber.networks[NETWORK].address,
     Kyber.abi,
     wallet,
 );
 
-const tokens: TokenMetadata[] = Tokens.networks[4];
+const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
+console.log('NETWORK', NETWORK);
 
 @Module({
     imports: [],
