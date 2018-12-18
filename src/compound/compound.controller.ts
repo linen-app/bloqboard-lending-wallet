@@ -104,11 +104,12 @@ export class CompoundController {
     async repayBorrow(
         @Query('token') token: TokenSymbol,
         @Query('amount') amount: string,
+        @Query('utilizeOtherTokens', ParseBooleanPipe) utilizeOtherTokens: boolean,
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amount, token);
-        const result = await this.compoundService.repayBorrow(token, rawAmount, needAwaitMining);
+        const result = await this.compoundService.repayBorrow(token, rawAmount, utilizeOtherTokens, needAwaitMining);
         return res.status(HttpStatus.CREATED).json(result);
     }
 }

@@ -1,10 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as ERC20 from '../resources/erc20.json';
-import { Wallet, Contract, utils, ContractTransaction } from 'ethers';
+import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
 import { TokenSymbol, TokenMetadata, Amount, Address } from './types';
 import { BigNumber } from 'ethers/utils';
-
-const maxUint256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
 @Injectable()
 export class TokenService {
@@ -24,7 +22,7 @@ export class TokenService {
 
     fromHumanReadable(amount: string, symbol: TokenSymbol): Amount {
         if (amount === '-1') {
-            return new BigNumber(maxUint256);
+            return new BigNumber(ethers.constants.MaxUint256);
         }
 
         const token = this.getTokenBySymbol(symbol);
@@ -52,11 +50,11 @@ export class TokenService {
         return allowance.eq(0);
     }
 
-    async unlockToken(symbol: TokenSymbol, spender: Address): Promise<ContractTransaction> {
+    async unlockToken(symbol: TokenSymbol, spender: Address, nonce?: number): Promise<ContractTransaction> {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const tx: ContractTransaction = await contract.approve(spender, maxUint256);
+        const tx: ContractTransaction = await contract.approve(spender, ethers.constants.MaxUint256, { nonce });
 
         return tx;
     }

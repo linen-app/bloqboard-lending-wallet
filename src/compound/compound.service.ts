@@ -1,7 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Contract, Wallet, ContractTransaction } from 'ethers';
+import { Contract, Wallet, ContractTransaction, ethers } from 'ethers';
 import { TokenService } from '../token.service';
-import { TokenSymbol, Amount, TransactionLogResponse } from '../types';
+import { TokenSymbol, Amount } from '../types';
+import { TransactionLog } from '../TransactionLog';
+import { KyberService } from '../kyber/kyber.service';
 
 @Injectable()
 export class CompoundService {
@@ -9,6 +11,7 @@ export class CompoundService {
     constructor(
         @Inject('wallet') private readonly wallet: Wallet,
         private readonly tokenService: TokenService,
+        private readonly kyberService: KyberService,
         @Inject('money-market-contract') private readonly moneyMarketContract: Contract,
     ) { }
 
@@ -29,43 +32,36 @@ export class CompoundService {
         return res;
     }
 
-    async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
+    async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        let unlockTx: ContractTransaction = null;
+        const transactions = new TransactionLog();
 
         if (await this.tokenService.isTokenLockedForSpender(symbol, this.moneyMarketContract.address)) {
-            unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
-        }
-
-        const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
-            token.address,
-            rawAmount,
-            { nonce: unlockTx && unlockTx.nonce + 1, gasLimit: 300000 },
-        );
-
-        if (needAwaitMining) {
-            if (unlockTx) await unlockTx.wait();
-            await supplyTx.wait();
-        }
-
-        const result = {
-            transactions: [{
-                name: 'supply',
-                transactionObject: supplyTx,
-            }],
-        };
-
-        if (unlockTx) {
-            result.transactions.push({
+            const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+            transactions.add({
                 name: 'unlock',
                 transactionObject: unlockTx,
             });
         }
 
-        return result;
+        const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
+            token.address,
+            rawAmount,
+            { nonce: transactions.getNextNonce(), gasLimit: 300000 },
+        );
+
+        transactions.add({
+            name: 'supply',
+            transactionObject: supplyTx,
+        });
+
+        if (needAwaitMining) {
+            await transactions.wait();
+        }
+        return transactions;
     }
 
-    async withdraw(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
+    async withdraw(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(token.address, rawAmount);
 
@@ -73,15 +69,15 @@ export class CompoundService {
             await txObject.wait();
         }
 
-        return {
-            transactions: [{
+        return new TransactionLog(
+            [{
                 name: 'withdraw',
                 transactionObject: txObject,
             }],
-        };
+        );
     }
 
-    async borrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
+    async borrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const txObject: ContractTransaction = await this.moneyMarketContract.borrow(token.address, rawAmount);
 
@@ -89,47 +85,64 @@ export class CompoundService {
             await txObject.wait();
         }
 
-        return {
-            transactions: [{
+        return new TransactionLog(
+            [{
                 name: 'borrow',
                 transactionObject: txObject,
             }],
-        };
+        );
     }
 
-    async repayBorrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLogResponse> {
+    async repayBorrow(
+        symbol: TokenSymbol,
+        rawAmount: Amount,
+        utilizeOtherTokens: boolean,
+        needAwaitMining: boolean,
+    ): Promise<TransactionLog> {
+        const transactions = new TransactionLog();
         const token = this.tokenService.getTokenBySymbol(symbol);
-        let unlockTx: ContractTransaction = null;
 
         if (await this.tokenService.isTokenLockedForSpender(symbol, this.moneyMarketContract.address)) {
-            unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
-        }
-
-        const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
-            token.address,
-            rawAmount,
-            { nonce: unlockTx && unlockTx.nonce + 1, gasLimit: 300000 },
-        );
-
-        if (needAwaitMining) {
-            if (unlockTx) await unlockTx.wait();
-            await repayTx.wait();
-        }
-
-        const result = {
-            transactions: [{
-                name: 'repayBorrow',
-                transactionObject: repayTx,
-            }],
-        };
-
-        if (unlockTx) {
-            result.transactions.push({
+            const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
+            transactions.add({
                 name: 'unlock',
                 transactionObject: unlockTx,
             });
         }
 
-        return result;
+        const neededAmount = rawAmount.eq(ethers.constants.MaxUint256) ? (await this.getBorrowBalance(symbol)) : rawAmount;
+        const balance = await this.tokenService.getTokenBalance(symbol);
+
+        console.log('utilizeOtherTokens', utilizeOtherTokens)
+
+        if (neededAmount.gt(balance) && utilizeOtherTokens) {
+            const additionalAmount = neededAmount.sub(balance);
+            console.log('buying additional amount', additionalAmount.toString())
+            const kyberTxs = await this.kyberService.buyToken(
+                additionalAmount,
+                symbol,
+                TokenSymbol.WETH,
+                false,
+                transactions.getNextNonce(),
+            );
+            transactions.combine(kyberTxs);
+        }
+
+        const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
+            token.address,
+            rawAmount,
+            { nonce: transactions.getNextNonce(), gasLimit: 300000 },
+        );
+
+        transactions.add({
+            name: 'repayBorrow',
+            transactionObject: repayTx,
+        });
+
+        if (needAwaitMining) {
+            await transactions.wait();
+        }
+
+        return transactions;
     }
 }

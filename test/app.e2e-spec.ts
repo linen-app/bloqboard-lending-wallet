@@ -3,10 +3,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { ethers, Contract, utils } from 'ethers';
 import { TokenMetadata, TokenSymbol } from '../src/types';
-import { CompoundService } from '../src/compound.service';
-import { AppController } from '../src/app.controller';
+import { CompoundService } from '../src/compound/compound.service';
+import { KyberService } from '../src/kyber/kyber.service';
+import { CompoundController } from '../src/compound/compound.controller';
 import { TokenService } from '../src/token.service';
 import * as Compound from '../resources/money-market.json';
+import * as Kyber from '../resources/kyber-network-proxy.json';
 
 describe('Compound API (e2e)', () => {
     let app: INestApplication;
@@ -14,39 +16,47 @@ describe('Compound API (e2e)', () => {
 
     beforeAll(async () => {
         jest.setTimeout(120000);
-
-        const provider = ethers.getDefaultProvider('rinkeby');
+        const NETWORK = 'rinkeby';
+        const provider = ethers.getDefaultProvider(NETWORK);
         const privateKey = require('../resources/account.json').privateKey;
         const wallet = new ethers.Wallet(privateKey, provider);
-        const walletProvider = {
-            provide: 'wallet',
-            useValue: wallet,
-        };
 
         const moneyMarketContract = new ethers.Contract(
-            Compound.networks[4].address,
+            Compound.networks[NETWORK].address,
             Compound.abi,
             wallet,
         );
-        const moneyMarketContractProvider = {
-            provide: 'money-market-contract',
-            useValue: moneyMarketContract,
-        };
 
-        const tokens: TokenMetadata[] = require('../resources/tokens.json').networks[4];
-        const tokensProvider = {
-            provide: 'tokens',
-            useValue: tokens,
-        };
+        const kyberContract = new ethers.Contract(
+            Kyber.networks[NETWORK].address,
+            Kyber.abi,
+            wallet,
+        );
+
+        const tokens: TokenMetadata[] = require('../resources/tokens.json').networks[NETWORK];
 
         moduleFixture = await Test.createTestingModule({
-            controllers: [AppController],
+            controllers: [CompoundController],
             providers: [
                 CompoundService,
+                KyberService,
                 TokenService,
-                walletProvider,
-                tokensProvider,
-                moneyMarketContractProvider,
+                {
+                    provide: 'wallet',
+                    useValue: wallet,
+                },
+                {
+                    provide: 'tokens',
+                    useValue: tokens,
+                },
+                {
+                    provide: 'money-market-contract',
+                    useValue: moneyMarketContract,
+                },
+                {
+                    provide: 'kyber-contract',
+                    useValue: kyberContract,
+                },
             ],
         }).compile();
 

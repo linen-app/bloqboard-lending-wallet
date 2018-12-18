@@ -1,7 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Contract, Wallet, ContractTransaction, ethers, utils } from 'ethers';
+import { Contract, Wallet, ethers, utils } from 'ethers';
 import { TokenService } from '../token.service';
-import { TokenSymbol, Amount, TransactionLogResponse, TokenMetadata } from '../types';
+import { TokenSymbol, Amount, TokenMetadata } from '../types';
+import { TransactionLog } from '../TransactionLog';
 
 const PRECISION = ethers.constants.WeiPerEther;
 
@@ -18,13 +19,18 @@ export class KyberService {
         tokenSymbolToBuy: TokenSymbol,
         tokenSymbolToSell: TokenSymbol,
         needAwaitMining: boolean,
-    ): Promise<TransactionLogResponse> {
+        nonce?: number,
+    ): Promise<TransactionLog> {
         const tokenToBuy = this.tokenService.getTokenBySymbol(tokenSymbolToBuy);
         const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
-        let unlockTx: ContractTransaction = null;
+        const transactions = new TransactionLog();
 
         if (await this.tokenService.isTokenLockedForSpender(tokenSymbolToSell, this.kyberContract.address)) {
-            unlockTx = await this.tokenService.unlockToken(tokenSymbolToSell, this.kyberContract.address);
+            const unlockTx = await this.tokenService.unlockToken(tokenSymbolToSell, this.kyberContract.address, nonce);
+            transactions.add({
+                name: 'unlock',
+                transactionObject: unlockTx,
+            });
         }
 
         const approximateAmountToSell = await this.calcApproximateAmountToSell(rawAmount, tokenToBuy, tokenToSell);
@@ -38,29 +44,19 @@ export class KyberService {
             rawAmount,
             rate,
             ethers.constants.AddressZero,
-            { nonce: unlockTx && unlockTx.nonce + 1 },
+            { nonce: transactions.getNextNonce() },
         );
 
+        transactions.add({
+            name: 'tradeTx',
+            transactionObject: tradeTx,
+        });
+
         if (needAwaitMining) {
-            if (unlockTx) await unlockTx.wait();
-            await tradeTx.wait();
+            await transactions.wait();
         }
 
-        const result = {
-            transactions: [{
-                name: 'tradeTx',
-                transactionObject: tradeTx,
-            }],
-        };
-
-        if (unlockTx) {
-            result.transactions.push({
-                name: 'unlock',
-                transactionObject: unlockTx,
-            });
-        }
-
-        return result;
+        return transactions;
     }
 
     private async calcApproximateAmountToSell(
