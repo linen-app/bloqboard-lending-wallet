@@ -3,27 +3,27 @@ import { TokenService } from '../token.service';
 import { ethers, utils } from 'ethers';
 import { TokenMetadata, TokenSymbol } from '../types';
 import { KyberService } from './kyber.service';
-import * as Kyber from 'resources/kyber-network-proxy.json';
-import * as Account from 'resources/account.json';
-import * as Tokens from 'resources/tokens.json';
+import * as Kyber from '../../resources/kyber-network-proxy.json';
+import * as Account from '../../resources/account.json';
+import * as Tokens from '../../resources/tokens.json';
 
 describe('KyberService', () => {
     let kyberService: KyberService;
 
     beforeEach(async () => {
-        jest.setTimeout(420000);
+        jest.setTimeout(120000);
 
-        const provider = ethers.getDefaultProvider('rinkeby');
+        const provider = ethers.getDefaultProvider('mainnet');
         const privateKey = Account.privateKey;
         const wallet = new ethers.Wallet(privateKey, provider);
 
         const kyberContract = new ethers.Contract(
-            Kyber.networks[4].address,
+            Kyber.networks['mainnet'].address,
             Kyber.abi,
             wallet,
         );
 
-        const tokens: TokenMetadata[] = Tokens.networks[4];
+        const tokens: TokenMetadata[] = Tokens.networks['mainnet'];
         const module = await Test.createTestingModule({
             providers: [
                 TokenService,

@@ -1,7 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Contract, Wallet, ContractTransaction, ethers } from 'ethers';
+import { Contract, Wallet, ContractTransaction, ethers, utils } from 'ethers';
 import { TokenService } from '../token.service';
-import { TokenSymbol, Amount, TransactionLogResponse } from '../types';
+import { TokenSymbol, Amount, TransactionLogResponse, TokenMetadata } from '../types';
+
+const PRECISION = ethers.constants.WeiPerEther;
 
 @Injectable()
 export class KyberService {
@@ -25,9 +27,8 @@ export class KyberService {
             unlockTx = await this.tokenService.unlockToken(tokenSymbolToSell, this.kyberContract.address);
         }
 
-        const response = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, 1);
-        const percision = ethers.constants.WeiPerEther;
-        const amountToSell = rawAmount.mul(percision).div(response.slippageRate);
+        const approximateAmountToSell = await this.calcApproximateAmountToSell(rawAmount, tokenToBuy, tokenToSell);
+        const { amountToSell, rate } = await this.calcAmountToSell(rawAmount, approximateAmountToSell, tokenToBuy, tokenToSell);
 
         const tradeTx = await this.kyberContract.trade(
             tokenToSell.address,
@@ -35,7 +36,7 @@ export class KyberService {
             tokenToBuy.address,
             this.wallet.address,
             rawAmount,
-            response.slippageRate,
+            rate,
             ethers.constants.AddressZero,
             { nonce: unlockTx && unlockTx.nonce + 1 },
         );
@@ -60,5 +61,32 @@ export class KyberService {
         }
 
         return result;
+    }
+
+    private async calcApproximateAmountToSell(
+        rawAmountToBuy: Amount,
+        tokenToBuy: TokenMetadata,
+        tokenToSell: TokenMetadata,
+    ) {
+        const response = await this.kyberContract.getExpectedRate(tokenToBuy.address, tokenToSell.address, rawAmountToBuy);
+        const amountToSell = rawAmountToBuy.mul(PRECISION).div(response.slippageRate);
+        console.log('calcApproximateAmountToSell:rate', utils.formatEther(response.slippageRate));
+        console.log('calcApproximateAmountToSell', utils.formatEther(amountToSell));
+
+        return amountToSell;
+    }
+
+    private async calcAmountToSell(
+        amountToBuy: Amount,
+        approximateAmountToSell: Amount,
+        tokenToBuy: TokenMetadata,
+        tokenToSell: TokenMetadata,
+    ) {
+        const response = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, approximateAmountToSell);
+        const amountToSell = amountToBuy.mul(response.slippageRate).div(PRECISION);
+        console.log('calcAmountToSell:rate', utils.formatEther(response.slippageRate));
+        console.log('calcAmountToSell', utils.formatEther(amountToSell));
+
+        return { amountToSell, rate: response.slippageRate };
     }
 }
