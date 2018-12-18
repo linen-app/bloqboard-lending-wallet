@@ -69,7 +69,7 @@ export class KyberService {
         tokenToSell: TokenMetadata,
     ) {
         const response = await this.kyberContract.getExpectedRate(tokenToBuy.address, tokenToSell.address, rawAmountToBuy);
-        const amountToSell = rawAmountToBuy.mul(PRECISION).div(response.slippageRate);
+        const amountToSell = rawAmountToBuy.mul(response.slippageRate).div(PRECISION);
         console.log('calcApproximateAmountToSell:rate', utils.formatEther(response.slippageRate));
         console.log('calcApproximateAmountToSell', utils.formatEther(amountToSell));
 
@@ -83,7 +83,7 @@ export class KyberService {
         tokenToSell: TokenMetadata,
     ) {
         const response = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, approximateAmountToSell);
-        const amountToSell = amountToBuy.mul(response.slippageRate).div(PRECISION);
+        const amountToSell = amountToBuy.mul(PRECISION).div(response.slippageRate);
         console.log('calcAmountToSell:rate', utils.formatEther(response.slippageRate));
         console.log('calcAmountToSell', utils.formatEther(amountToSell));
 

@@ -26,7 +26,7 @@ export class KyberController {
         @Res() res,
     ): Promise<string> {
         const rawAmount = this.tokenService.fromHumanReadable(amountToBuy, tokenToBuy);
-        const result = await this.kyberService.buyToken(rawAmount, tokenToSell, tokenToBuy, needAwaitMining);
+        const result = await this.kyberService.buyToken(rawAmount, tokenToBuy, tokenToSell, needAwaitMining);
         return res.status(HttpStatus.CREATED).json(result);
     }
 }
