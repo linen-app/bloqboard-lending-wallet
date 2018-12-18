@@ -33,7 +33,7 @@ describe('Compound API (e2e)', () => {
             useValue: moneyMarketContract,
         };
 
-        const tokens: TokenMetadata[] = require('../resources/tokens.json');
+        const tokens: TokenMetadata[] = require('../resources/tokens.json').networks[4];
         const tokensProvider = {
             provide: 'tokens',
             useValue: tokens,

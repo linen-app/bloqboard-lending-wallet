@@ -5,8 +5,10 @@ import { TokenService } from './token.service';
 import { ethers } from 'ethers';
 import { TokenMetadata } from './types';
 import * as Compound from '../resources/money-market.json';
+import * as Kyber from '../resources/kyber-network-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
+import { KyberService } from './kyber.service';
 
 const provider = ethers.getDefaultProvider('rinkeby');
 const privateKey = Account.privateKey;
@@ -17,31 +19,37 @@ const moneyMarketContract = new ethers.Contract(
     Compound.abi,
     wallet,
 );
-const moneyMarketContractProvider = {
-    provide: 'money-market-contract',
-    useValue: moneyMarketContract,
-};
+const kyberContract = new ethers.Contract(
+    Kyber.networks[4].address,
+    Kyber.abi,
+    wallet,
+);
 
-const walletProvider = {
-    provide: 'wallet',
-    useValue: wallet,
-};
-
-const tokens: TokenMetadata[] = Tokens;
-const tokensProvider = {
-    provide: 'tokens',
-    useValue: tokens,
-};
+const tokens: TokenMetadata[] = Tokens.networks[4];
 
 @Module({
     imports: [],
     controllers: [AppController],
     providers: [
         CompoundService,
+        KyberService,
         TokenService,
-        walletProvider,
-        tokensProvider,
-        moneyMarketContractProvider,
+        {
+            provide: 'wallet',
+            useValue: wallet,
+        },
+        {
+            provide: 'tokens',
+            useValue: tokens,
+        },
+        {
+            provide: 'money-market-contract',
+            useValue: moneyMarketContract,
+        },
+        {
+            provide: 'kyber-contract',
+            useValue: kyberContract,
+        },
     ],
 })
 export class AppModule { }
