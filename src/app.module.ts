@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { CompoundService } from './compound.service';
+import { CompoundController } from './compound/compound.controller';
+import { CompoundService } from './compound/compound.service';
 import { TokenService } from './token.service';
 import { ethers } from 'ethers';
 import { TokenMetadata } from './types';
+import { KyberService } from './kyber/kyber.service';
+import { KyberController } from './kyber/kyber.controller';
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
-import { KyberService } from './kyber.service';
 
 const provider = ethers.getDefaultProvider('rinkeby');
 const privateKey = Account.privateKey;
@@ -29,7 +30,7 @@ const tokens: TokenMetadata[] = Tokens.networks[4];
 
 @Module({
     imports: [],
-    controllers: [AppController],
+    controllers: [CompoundController, KyberController],
     providers: [
         CompoundService,
         KyberService,

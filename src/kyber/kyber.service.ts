@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Contract, Wallet, ContractTransaction, ethers, utils } from 'ethers';
-import { TokenService } from './token.service';
-import { TokenSymbol, Amount, TransactionLogResponse } from './types';
+import { Contract, Wallet, ContractTransaction, ethers } from 'ethers';
+import { TokenService } from '../token.service';
+import { TokenSymbol, Amount, TransactionLogResponse } from '../types';
 
 @Injectable()
 export class KyberService {

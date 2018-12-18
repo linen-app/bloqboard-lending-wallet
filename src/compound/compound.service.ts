@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Contract, Wallet, ContractTransaction } from 'ethers';
-import { TokenService } from './token.service';
-import { TokenSymbol, Amount, TransactionLogResponse } from './types';
+import { TokenService } from '../token.service';
+import { TokenSymbol, Amount, TransactionLogResponse } from '../types';
 
 @Injectable()
 export class CompoundService {

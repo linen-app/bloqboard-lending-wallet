@@ -1,11 +1,11 @@
 import { Test } from '@nestjs/testing';
-import { TokenService } from './token.service';
+import { TokenService } from '../token.service';
 import { ethers, utils } from 'ethers';
-import { TokenMetadata, TokenSymbol } from './types';
+import { TokenMetadata, TokenSymbol } from '../types';
 import { KyberService } from './kyber.service';
-import * as Kyber from '../resources/kyber-network-proxy.json';
-import * as Account from '../resources/account.json';
-import * as Tokens from '../resources/tokens.json';
+import * as Kyber from 'resources/kyber-network-proxy.json';
+import * as Account from 'resources/account.json';
+import * as Tokens from 'resources/tokens.json';
 
 describe('KyberService', () => {
     let kyberService: KyberService;
