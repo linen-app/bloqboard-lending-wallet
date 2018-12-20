@@ -18,12 +18,12 @@ describe('KyberService', () => {
         const wallet = new ethers.Wallet(privateKey, provider);
 
         const kyberContract = new ethers.Contract(
-            Kyber.networks['mainnet'].address,
+            Kyber.networks.mainnet.address,
             Kyber.abi,
             wallet,
         );
 
-        const tokens: TokenMetadata[] = Tokens.networks['mainnet'];
+        const tokens: TokenMetadata[] = Tokens.networks.mainnet;
         const module = await Test.createTestingModule({
             providers: [
                 TokenService,

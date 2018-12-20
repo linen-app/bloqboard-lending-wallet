@@ -1,0 +1,6 @@
+{
+    "networks" : {
+        "mainnet" : "https://api.bloqboard.com/api/v1",
+        "kovan" : "https://kovan-api.bloqboard.com/api/v1"
+    }
+}

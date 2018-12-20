@@ -1,0 +1,6 @@
+{
+    "networks" : {
+        "mainnet" : "https://rates.confirmationlabs.io",
+        "kovan" : "https://staging-rates.confirmationlabs.io"
+    }
+}

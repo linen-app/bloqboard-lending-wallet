@@ -7,12 +7,13 @@ import { ethers } from 'ethers';
 import { TokenMetadata } from './types';
 import { KyberService } from './kyber/kyber.service';
 import { KyberController } from './kyber/kyber.controller';
+import { format } from 'winston';
+import { DharmaService } from './dharma/dharma.service';
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
 import winston = require('winston');
-import { format } from 'winston';
 
 const NETWORK = process.env.NETWORK || 'rinkeby';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -67,6 +68,7 @@ const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
             provide: 'kyber-contract',
             useValue: kyberContract,
         },
+        DharmaService,
     ],
 })
 export class AppModule {

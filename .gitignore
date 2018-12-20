@@ -81,3 +81,5 @@ typings/
 dist/
 
 account.json
+
+.vscode/
