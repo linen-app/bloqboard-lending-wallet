@@ -47,8 +47,8 @@ export class DharmaService {
                 .then(x => ({
                     id: relayerOrder.id,
                     principal: TokenAmount.fromRaw(x.principalAmount, x.principalTokenSymbol).toString(),
-                    maxLtv: relayerOrder.maxLtv,
-                    interestRate: x.interestRate.div(100).toNumber(),
+                    maxLtv: relayerOrder.maxLtv / 100,
+                    interestRate: x.interestRate.toNumber() / 100,
                     termLength: x.termLength.toNumber(),
                     amortizationUnit: x.amortizationUnit,
                     collateralTokenSymbol: x.collateralTokenSymbol,
