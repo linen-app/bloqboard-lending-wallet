@@ -16,10 +16,25 @@ export class KyberController {
         private readonly tokenService: TokenService,
     ) { }
 
+    @Post('sell')
+    @ApiImplicitQuery({ name: 'tokenToSell', enum: supportedTokens })
+    @ApiImplicitQuery({ name: 'tokenToBuy', enum: supportedTokens })
+    async sell(
+        @Query('amountToSell') amountToSell: string,
+        @Query('tokenToSell') tokenToSell: TokenSymbol,
+        @Query('tokenToBuy') tokenToBuy: TokenSymbol,
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Res() res,
+    ): Promise<string> {
+        const rawAmount = this.tokenService.fromHumanReadable(amountToSell, tokenToSell);
+        const result = await this.kyberService.sellToken(rawAmount, tokenToSell, tokenToBuy, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
+    }
+
     @Post('buy')
     @ApiImplicitQuery({ name: 'tokenToBuy', enum: supportedTokens })
     @ApiImplicitQuery({ name: 'tokenToSell', enum: supportedTokens })
-    async supply(
+    async buy(
         @Query('amountToBuy') amountToBuy: string,
         @Query('tokenToBuy') tokenToBuy: TokenSymbol,
         @Query('tokenToSell') tokenToSell: TokenSymbol,

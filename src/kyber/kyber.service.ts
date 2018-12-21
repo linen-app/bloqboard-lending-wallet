@@ -16,6 +16,46 @@ export class KyberService {
         @Inject('kyber-contract') private readonly kyberContract: Contract,
     ) { }
 
+    async sellToken(
+        rawAmount: Amount,
+        tokenSymbolToSell: TokenSymbol,
+        tokenSymbolToBuy: TokenSymbol,
+        needAwaitMining: boolean,
+        nonce?: number,
+    ): Promise<TransactionLog> {
+        const tokenToBuy = this.tokenService.getTokenBySymbol(tokenSymbolToBuy);
+        const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
+        const transactions = new TransactionLog();
+
+        if (await this.tokenService.isTokenLockedForSpender(tokenSymbolToSell, this.kyberContract.address)) {
+            const unlockTx = await this.tokenService.unlockToken(tokenSymbolToSell, this.kyberContract.address, nonce);
+            transactions.add({ name: 'unlock', transactionObject: unlockTx });
+        }
+
+        const { slippageRate } = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, rawAmount);
+
+        const tradeTx = await this.kyberContract.swapTokenToToken(
+            tokenToSell.address,
+            rawAmount,
+            tokenToBuy.address,
+            slippageRate,
+            { nonce: transactions.getNextNonce() },
+        );
+
+        transactions.add({
+            name: 'tradeTx',
+            transactionObject: tradeTx,
+        });
+
+        this.logger.info(`Selling ${rawAmount} ${tokenSymbolToSell} for ${tokenSymbolToBuy}`);
+
+        if (needAwaitMining) {
+            await transactions.wait();
+        }
+
+        return transactions;
+    }
+
     async buyToken(
         rawAmount: Amount,
         tokenSymbolToBuy: TokenSymbol,
@@ -29,10 +69,7 @@ export class KyberService {
 
         if (await this.tokenService.isTokenLockedForSpender(tokenSymbolToSell, this.kyberContract.address)) {
             const unlockTx = await this.tokenService.unlockToken(tokenSymbolToSell, this.kyberContract.address, nonce);
-            transactions.add({
-                name: 'unlock',
-                transactionObject: unlockTx,
-            });
+            transactions.add({ name: 'unlock', transactionObject: unlockTx });
         }
 
         const approximateAmountToSell = await this.calcApproximateAmountToSell(rawAmount, tokenToBuy, tokenToSell);
@@ -53,6 +90,8 @@ export class KyberService {
             name: 'tradeTx',
             transactionObject: tradeTx,
         });
+
+        this.logger.info(`Buying ${rawAmount} ${tokenSymbolToBuy} for ${tokenSymbolToSell}`);
 
         if (needAwaitMining) {
             await transactions.wait();
