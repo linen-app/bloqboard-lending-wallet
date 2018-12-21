@@ -1,6 +1,7 @@
 import { Get, Controller, Post, Query, Res, HttpStatus, ParseIntPipe, Param } from '@nestjs/common';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { DharmaService } from './dharma.service';
+import { ApiImplicitQuery } from '@nestjs/swagger';
 
 @Controller('dharma')
 export class DharmaController {
@@ -19,6 +20,7 @@ export class DharmaController {
     }
 
     @Post('fill-lend-offer/:lendOfferId')
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
     async fillLendOffer(
         @Param('lendOfferId') lendOfferId: string,
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,

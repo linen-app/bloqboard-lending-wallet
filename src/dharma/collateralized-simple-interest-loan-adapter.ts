@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Contract } from 'ethers';
 import { BigNumber } from 'bignumber.js';
+import { RelayerDebtOrder } from './relayer-debt-order';
 
 type AmortizationUnit = 'hours' | 'days' | 'weeks' | 'months' | 'years';
 
@@ -65,7 +66,7 @@ interface SimpleInterestTermsContractParameters {
 }
 
 // Extend order to include parameters necessary for a collateralized terms contract.
-interface CollateralizedSimpleInterestLoanOrder extends SimpleInterestLoanOrder {
+export interface CollateralizedSimpleInterestLoanOrder extends SimpleInterestLoanOrder {
     collateralTokenSymbol: string;
     collateralTokenAddress: string;
     collateralTokenIndex: BigNumber;
@@ -90,9 +91,29 @@ export class CollateralizedSimpleInterestLoanAdapter {
         @Inject('dharma-token-registry-contract') private readonly dharmaTokenRegistry: Contract,
     ) { }
 
-    async fromDebtOrder(
-        debtOrderData: DebtOrderData,
-    ): Promise<CollateralizedSimpleInterestLoanOrder> {
+    async fromRelayerDebtOrder(relayerLendOffer: RelayerDebtOrder): Promise<CollateralizedSimpleInterestLoanOrder> {
+        const debtOrderData: DebtOrderData = {
+            kernelVersion: relayerLendOffer.kernelAddress,
+            issuanceVersion: relayerLendOffer.repaymentRouterAddress,
+            principalAmount: new BigNumber(relayerLendOffer.principalAmount || 0),
+            principalToken: relayerLendOffer.principalTokenAddress,
+            debtor: relayerLendOffer.debtorAddress,
+            debtorFee: new BigNumber(relayerLendOffer.debtorFee || 0),
+            termsContract: relayerLendOffer.termsContractAddress,
+            termsContractParameters: relayerLendOffer.termsContractParameters,
+            expirationTimestampInSec: new BigNumber(new Date(relayerLendOffer.expirationTime).getTime() / 1000),
+            salt: new BigNumber(relayerLendOffer.salt || 0),
+            debtorSignature: relayerLendOffer.debtorSignature ? JSON.parse(relayerLendOffer.debtorSignature) : null,
+            relayer: relayerLendOffer.relayerAddress,
+            relayerFee: new BigNumber(relayerLendOffer.relayerFee || 0),
+            underwriter: relayerLendOffer.underwriterAddress,
+            underwriterRiskRating: new BigNumber(relayerLendOffer.underwriterRiskRating || 0),
+            underwriterFee: new BigNumber(relayerLendOffer.underwriterFee || 0),
+            underwriterSignature: relayerLendOffer.underwriterSignature ? JSON.parse(relayerLendOffer.underwriterSignature) : null,
+            creditor: relayerLendOffer.creditorAddress,
+            creditorSignature: relayerLendOffer.creditorSignature ? JSON.parse(relayerLendOffer.creditorSignature) : null,
+            creditorFee: new BigNumber(relayerLendOffer.creditorFee || 0),
+        };
 
         const { principalTokenIndex, collateralTokenIndex, ...params } = this.unpackParameters(
             debtOrderData.termsContractParameters,

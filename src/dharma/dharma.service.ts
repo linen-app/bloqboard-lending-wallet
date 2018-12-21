@@ -4,7 +4,7 @@ import Axios from 'axios';
 import { stringify } from 'qs';
 import { Agent } from 'https';
 import { Wallet } from 'ethers';
-import { CollateralizedSimpleInterestLoanAdapter } from './collateralized-simple-interest-loan-adapter';
+import { CollateralizedSimpleInterestLoanAdapter, CollateralizedSimpleInterestLoanOrder } from './collateralized-simple-interest-loan-adapter';
 import { MaxLTVLoanOffer, MaxLTVData, CreditorValues, Price } from './ltv-creditor-proxy-wrapper.ts/max_ltv_loan_offer';
 import { TimeInterval } from './ltv-creditor-proxy-wrapper.ts/time_interval';
 import { TokenAmount } from './ltv-creditor-proxy-wrapper.ts/token_amount';
@@ -13,6 +13,7 @@ import { InterestRate } from './ltv-creditor-proxy-wrapper.ts/interest_rate';
 import { TransactionLog } from '../../src/TransactionLog';
 import { TokenService } from '../../src/token.service';
 import { Logger } from 'winston';
+import { RelayerDebtOrder } from './relayer-debt-order';
 
 @Injectable()
 export class DharmaService {
@@ -41,11 +42,18 @@ export class DharmaService {
             maxUsdAmount,
         );
 
-        const humanReadableResponse = res.map(x => {
-            return {
-                ...x,
-            };
-        });
+        const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
+            this.loadAdapter.fromRelayerDebtOrder(relayerOrder)
+                .then(x => ({
+                    id: relayerOrder.id,
+                    principal: TokenAmount.fromRaw(x.principalAmount, x.principalTokenSymbol).toString(),
+                    maxLtv: relayerOrder.maxLtv,
+                    interestRate: x.interestRate.div(100).toNumber(),
+                    termLength: x.termLength.toNumber(),
+                    amortizationUnit: x.amortizationUnit,
+                    collateralTokenSymbol: x.collateralTokenSymbol,
+                })),
+        ));
 
         return humanReadableResponse;
     }
@@ -173,35 +181,15 @@ export class DharmaService {
     }
 
     // TODO: TEST THIS THROUGHLY
-    private async convertLendOfferToProxyInstance(relayerLendOffer: any) {
+    private async convertLendOfferToProxyInstance(relayerLendOffer: RelayerDebtOrder) {
         if (relayerLendOffer.maxLtv === undefined) {
             this.logger.error(`maxLtv is undefined in lend offer: ${JSON.stringify(relayerLendOffer)}`);
         }
 
-        const parsedOffer = await this.loadAdapter.fromDebtOrder({
-            kernelVersion: relayerLendOffer.kernelAddress,
-            issuanceVersion: relayerLendOffer.repaymentRouterAddress,
-            principalAmount: new BigNumber(relayerLendOffer.principalAmount || 0),
-            principalToken: relayerLendOffer.principalTokenAddress,
-            debtor: relayerLendOffer.debtorAddress,
-            debtorFee: new BigNumber(relayerLendOffer.debtorFee || 0),
-            termsContract: relayerLendOffer.termsContractAddress,
-            termsContractParameters: relayerLendOffer.termsContractParameters,
-            expirationTimestampInSec: new BigNumber(new Date(relayerLendOffer.expirationTime).getTime() / 1000),
-            salt: new BigNumber(relayerLendOffer.salt || 0),
-            debtorSignature: relayerLendOffer.debtorSignature ? JSON.parse(relayerLendOffer.debtorSignature) : null,
-            relayer: relayerLendOffer.relayerAddress,
-            relayerFee: new BigNumber(relayerLendOffer.relayerFee || 0),
-            underwriter: relayerLendOffer.underwriterAddress,
-            underwriterRiskRating: new BigNumber(relayerLendOffer.underwriterRiskRating || 0),
-            underwriterFee: new BigNumber(relayerLendOffer.underwriterFee || 0),
-            underwriterSignature: relayerLendOffer.underwriterSignature ? JSON.parse(relayerLendOffer.underwriterSignature) : null,
-            creditor: relayerLendOffer.creditorAddress,
-            creditorSignature: relayerLendOffer.creditorSignature ? JSON.parse(relayerLendOffer.creditorSignature) : null,
-            creditorFee: new BigNumber(relayerLendOffer.creditorFee || 0),
-        });
+        const parsedOffer = await this.loadAdapter.fromRelayerDebtOrder(relayerLendOffer);
 
         const principal = TokenAmount.fromRaw(parsedOffer.principalAmount, parsedOffer.principalTokenSymbol);
+
         const lendOfferParams: MaxLTVData = {
             collateralTokenAddress: parsedOffer.collateralTokenAddress,
             collateralTokenIndex: parsedOffer.collateralTokenIndex,
