@@ -13,7 +13,7 @@ import { InterestRate } from './ltv-creditor-proxy-wrapper.ts/interest_rate';
 import { TransactionLog } from '../../src/TransactionLog';
 import { TokenService } from '../../src/token.service';
 import { Logger } from 'winston';
-import { RelayerDebtOrder } from './relayer-debt-order';
+import { RelayerDebtOrder, Status } from './relayer-debt-order';
 
 @Injectable()
 export class DharmaService {
@@ -30,17 +30,30 @@ export class DharmaService {
         private readonly loadAdapter: CollateralizedSimpleInterestLoanAdapter,
     ) { }
 
+    async getDebtOrders(
+        principalTokenSymbol?: TokenSymbol, collateralTokenSymbol?: TokenSymbol, minUsdAmount?: number, maxUsdAmount?: number,
+    ): Promise<any[]> {
+        const res = await this.fetchOrders(Status.SignedByDebtor, principalTokenSymbol, collateralTokenSymbol, minUsdAmount, maxUsdAmount);
+
+        const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
+            this.loadAdapter.fromRelayerDebtOrder(relayerOrder)
+                .then(x => ({
+                    id: relayerOrder.id,
+                    principal: TokenAmount.fromRaw(x.principalAmount, x.principalTokenSymbol).toString(),
+                    collateral: TokenAmount.fromRaw(x.collateralAmount, x.collateralTokenSymbol).toString(),
+                    interestRate: x.interestRate.toNumber() / 100,
+                    termLength: x.termLength.toNumber(),
+                    amortizationUnit: x.amortizationUnit,
+                })),
+        ));
+
+        return humanReadableResponse;
+    }
+
     async getLendOffers(
         principalTokenSymbol?: TokenSymbol, collateralTokenSymbol?: TokenSymbol, minUsdAmount?: number, maxUsdAmount?: number,
     ): Promise<any[]> {
-        const principalToken = principalTokenSymbol && this.tokenService.getTokenBySymbol(principalTokenSymbol);
-        const collateralToken = collateralTokenSymbol && this.tokenService.getTokenBySymbol(collateralTokenSymbol);
-        const res: any[] = await this.fetchLendOffers(
-            principalToken && principalToken.address,
-            collateralToken && collateralToken.address,
-            minUsdAmount,
-            maxUsdAmount,
-        );
+        const res = await this.fetchOrders(Status.SignedByCreditor, principalTokenSymbol, collateralTokenSymbol, minUsdAmount, maxUsdAmount);
 
         const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
             this.loadAdapter.fromRelayerDebtOrder(relayerOrder)
@@ -60,7 +73,7 @@ export class DharmaService {
 
     async fillLendOffer(offerId: string, needAwaitMining: boolean): Promise<TransactionLog> {
         const transactions = new TransactionLog();
-        const rawOffer = await this.fetchLendOffer(offerId);
+        const rawOffer = await this.fetchOrder(offerId);
         const { offer, principal, collateral } = await this.convertLendOfferToProxyInstance(rawOffer);
 
         const collateralSymbol = collateral.tokenSymbol as TokenSymbol;
@@ -121,7 +134,7 @@ export class DharmaService {
         return TokenAmount.fromRaw(collateral, collateralTokenSymbol);
     }
 
-    private async fetchLendOffer(offerId: string) {
+    private async fetchOrder(offerId: string): Promise<RelayerDebtOrder> {
         const debtsUrl = `${this.bloqboardUri}/Debts`;
         const response = await Axios.get(`${debtsUrl}/${offerId}`, {
             httpsAgent: new Agent({ rejectUnauthorized: false }),
@@ -130,16 +143,20 @@ export class DharmaService {
         return response.data;
     }
 
-    private async fetchLendOffers(
-        principalTokenAddress?: Address,
-        collateralTokenAddress?: Address,
+    private async fetchOrders(
+        status: Status,
+        principalTokenSymbol?: TokenSymbol,
+        collateralTokenSymbol?: TokenSymbol,
         minUsdAmount?: number,
         maxUsdAmount?: number,
-    ) {
+    ): Promise<RelayerDebtOrder[]> {
         const debtsUrl = `${this.bloqboardUri}/Debts`;
         const kernelAddress = this.dharmaKernelAddress;
         const pagination = {};
         const sorting = {};
+
+        const principalToken = principalTokenSymbol && this.tokenService.getTokenBySymbol(principalTokenSymbol);
+        const collateralToken = collateralTokenSymbol && this.tokenService.getTokenBySymbol(collateralTokenSymbol);
 
         const filter = {
             // principalTokenAddresses: principalTokenAddress && [principalTokenAddress],
@@ -150,11 +167,13 @@ export class DharmaService {
 
         const response = await Axios.get(debtsUrl, {
             params: {
-                status: 'SignedByCreditor', ...pagination, kernelAddress, ...sorting, ...filter,
+                status, ...pagination, kernelAddress, ...sorting, ...filter,
             },
             paramsSerializer: (params) => stringify(params, { allowDots: true, arrayFormat: 'repeat' }),
             httpsAgent: new Agent({ rejectUnauthorized: false }),
         });
+
+        this.logger.info(`Recieved ${response.data.length} debt orders from ${response.config.url}${response.request.path}`);
 
         return response.data;
     }

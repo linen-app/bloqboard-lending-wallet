@@ -1,7 +1,15 @@
 import { Address } from '../types';
 
+export enum Status {
+    SignedByDebtor = 'SignedByDebtor',
+    SignedByCreditor = 'SignedByCreditor',
+    Filled = 'Filled',
+    Cancelled = 'Cancelled',
+}
+
 export class RelayerDebtOrder {
     id: string;
+    status: Status;
     kernelAddress: Address;
     repaymentRouterAddress: Address;
     principalAmount: string;
@@ -22,6 +30,6 @@ export class RelayerDebtOrder {
     creditorAddress: Address;
     creditorSignature: string;
     creditorFee: string;
-    maxLtv: number;
-    signerAddress: Address;
+    maxLtv?: number;
+    signerAddress?: Address;
 }

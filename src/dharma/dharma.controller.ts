@@ -10,6 +10,16 @@ export class DharmaController {
         private readonly dharmaService: DharmaService,
     ) { }
 
+    @Get('debt-orders')
+    async getDebtOrders(
+        @Query('minUsdAmount', ParseIntPipe) minUsdAmount: number,
+        @Query('maxUsdAmount', ParseIntPipe) maxUsdAmount: number,
+    ): Promise<any> {
+        const debtOrders = await this.dharmaService.getDebtOrders(null, null, minUsdAmount, maxUsdAmount);
+
+        return debtOrders;
+    }
+
     @Get('lend-offers')
     async getLendOffers(
         @Query('minUsdAmount', ParseIntPipe) minUsdAmount: number,
