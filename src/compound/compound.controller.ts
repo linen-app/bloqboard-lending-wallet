@@ -7,7 +7,7 @@ import { ParseBooleanPipe } from '../parseBoolean.pipe';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
-@Controller()
+@Controller('compound')
 export class CompoundController {
     constructor(
         private readonly compoundService: CompoundService,

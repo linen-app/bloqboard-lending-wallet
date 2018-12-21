@@ -29,10 +29,25 @@ export class DharmaService {
         private readonly loadAdapter: CollateralizedSimpleInterestLoanAdapter,
     ) { }
 
-    async getLendOffers(principalToken?: TokenSymbol, collateralToken?: TokenSymbol, minUsdAmount?: number): Promise<any[]> {
-        const res = await this.fetchLendOffers();
+    async getLendOffers(
+        principalTokenSymbol?: TokenSymbol, collateralTokenSymbol?: TokenSymbol, minUsdAmount?: number, maxUsdAmount?: number,
+    ): Promise<any[]> {
+        const principalToken = principalTokenSymbol && this.tokenService.getTokenBySymbol(principalTokenSymbol);
+        const collateralToken = collateralTokenSymbol && this.tokenService.getTokenBySymbol(collateralTokenSymbol);
+        const res: any[] = await this.fetchLendOffers(
+            principalToken && principalToken.address,
+            collateralToken && collateralToken.address,
+            minUsdAmount,
+            maxUsdAmount,
+        );
 
-        return res;
+        const humanReadableResponse = res.map(x => {
+            return {
+                ...x,
+            };
+        });
+
+        return humanReadableResponse;
     }
 
     async fillLendOffer(offerId: string, needAwaitMining: boolean): Promise<TransactionLog> {
@@ -41,7 +56,7 @@ export class DharmaService {
         const { offer, principal, collateral } = await this.convertLendOfferToProxyInstance(rawOffer);
 
         const collateralSymbol = collateral.tokenSymbol as TokenSymbol;
-        if (await this.tokenService.isTokenLockedForSpender(collateralSymbol, this.creditorProxyAddress)) {
+        if (await this.tokenService.isTokenLockedForSpender(collateralSymbol, this.tokenTransferProxyAddress)) {
             const unlockTx = await this.tokenService.unlockToken(collateralSymbol, this.tokenTransferProxyAddress);
             transactions.add({
                 name: 'unlock',
@@ -107,12 +122,24 @@ export class DharmaService {
         return response.data;
     }
 
-    private async fetchLendOffers() {
+    private async fetchLendOffers(
+        principalTokenAddress?: Address,
+        collateralTokenAddress?: Address,
+        minUsdAmount?: number,
+        maxUsdAmount?: number,
+    ) {
         const debtsUrl = `${this.bloqboardUri}/Debts`;
         const kernelAddress = this.dharmaKernelAddress;
         const pagination = {};
         const sorting = {};
-        const filter = {};
+
+        const filter = {
+            // principalTokenAddresses: principalTokenAddress && [principalTokenAddress],
+            // collateralTokenAddresses: collateralTokenAddress && [collateralTokenAddress],
+            amountFrom: minUsdAmount,
+            amountTo: maxUsdAmount,
+        };
+
         const response = await Axios.get(debtsUrl, {
             params: {
                 status: 'SignedByCreditor', ...pagination, kernelAddress, ...sorting, ...filter,

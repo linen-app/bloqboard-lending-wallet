@@ -7,13 +7,13 @@ import * as Tokens from '../../resources/tokens.json';
 import * as CreditorProxy from '../../resources/dharma/creditor-proxy.json';
 import * as BloqboardAPI from '../../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../../resources/dharma/currency-rates-api.json';
-import * as contractArtifacts from 'dharma-contract-artifacts';
+import * as ContractArtifacts from 'dharma-contract-artifacts';
 import * as DharmaAddressBook from 'dharma-address-book';
 import { WinstonModule } from 'nest-winston';
 import winston = require('winston');
 import { format } from 'winston';
 import { TokenService } from '../token.service';
-import { TokenMetadata } from '../types';
+import { TokenMetadata, TokenSymbol } from '../types';
 
 describe('DharmaService', () => {
     let service: DharmaService;
@@ -29,7 +29,7 @@ describe('DharmaService', () => {
 
         const tokenRegistryContract = new ethers.Contract(
             dharmaAddresses.TokenRegistry,
-            contractArtifacts.latest.TokenRegistry,
+            ContractArtifacts.latest.TokenRegistry,
             wallet,
         );
 
@@ -68,7 +68,12 @@ describe('DharmaService', () => {
         expect(service).toBeDefined();
     });
 
-    it('should fill lend offer', async () => {
+    it('should be able to get offers', async () => {
+        const res = await service.getLendOffers(TokenSymbol.WETH, TokenSymbol.DAI, 0, 5);
+        expect(res.length).toBeGreaterThan(0);
+    });
+
+    xit('should fill lend offer', async () => {
         const tx = await service.fillLendOffer('0x52f39ab2d36b295cb02af4a13089842cf61a4ea771357a08d749c22f4bf6073e', false);
         expect(tx.transactions.pop().transactionObject.hash).toBeTruthy();
     });

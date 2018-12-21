@@ -7,7 +7,7 @@ import { ParseBooleanPipe } from 'src/parseBoolean.pipe';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
-@Controller()
+@Controller('kyber')
 export class KyberController {
 
     constructor(
