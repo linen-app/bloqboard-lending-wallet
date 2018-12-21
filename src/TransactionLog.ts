@@ -6,7 +6,7 @@ export interface TransactionLogEntry {
 }
 
 export class TransactionLog {
-    private transactions: TransactionLogEntry[] = [];
+    public readonly transactions: TransactionLogEntry[] = [];
 
     constructor(txs?: TransactionLogEntry[]) {
         if (!txs) return;

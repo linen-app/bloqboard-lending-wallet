@@ -24,6 +24,7 @@
     "@nestjs/swagger": "^2.5.1",
     "axios": "^0.18.0",
     "bignumber.js": "^5.0.0",
+    "dharma-address-book": "^1.0.6",
     "dharma-contract-artifacts": "^1.0.4",
     "ethers": "^4.0.15",
     "moment": "^2.23.0",

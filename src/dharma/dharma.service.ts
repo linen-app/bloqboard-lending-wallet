@@ -10,7 +10,9 @@ import { TimeInterval } from './ltv-creditor-proxy-wrapper.ts/time_interval';
 import { TokenAmount } from './ltv-creditor-proxy-wrapper.ts/token_amount';
 import { BigNumber } from 'bignumber.js';
 import { InterestRate } from './ltv-creditor-proxy-wrapper.ts/interest_rate';
-import { TransactionResponse } from 'ethers/providers';
+import { TransactionLog } from '../../src/TransactionLog';
+import { TokenService } from '../../src/token.service';
+import { Logger } from 'winston';
 
 @Injectable()
 export class DharmaService {
@@ -21,6 +23,9 @@ export class DharmaService {
         @Inject('currency-rates-uri') private readonly currencyRatesUrl: string,
         @Inject('dharma-kernel-address') private readonly dharmaKernelAddress: Address,
         @Inject('creditor-proxy-address') private readonly creditorProxyAddress: Address,
+        @Inject('token-transfer-proxy-address') private readonly tokenTransferProxyAddress: Address,
+        @Inject('winston') private readonly logger: Logger,
+        private readonly tokenService: TokenService,
         private readonly loadAdapter: CollateralizedSimpleInterestLoanAdapter,
     ) { }
 
@@ -30,9 +35,19 @@ export class DharmaService {
         return res;
     }
 
-    async fillLendOffer(offerId: string): Promise<TransactionResponse> {
+    async fillLendOffer(offerId: string, needAwaitMining: boolean): Promise<TransactionLog> {
+        const transactions = new TransactionLog();
         const rawOffer = await this.fetchLendOffer(offerId);
         const { offer, principal, collateral } = await this.convertLendOfferToProxyInstance(rawOffer);
+
+        const collateralSymbol = collateral.tokenSymbol as TokenSymbol;
+        if (await this.tokenService.isTokenLockedForSpender(collateralSymbol, this.creditorProxyAddress)) {
+            const unlockTx = await this.tokenService.unlockToken(collateralSymbol, this.tokenTransferProxyAddress);
+            transactions.add({
+                name: 'unlock',
+                transactionObject: unlockTx,
+            });
+        }
 
         const principalPrice = await this.getSignedRate(principal.tokenSymbol, 'USD');
         const collateralPrice = await this.getSignedRate(collateral.tokenSymbol, 'USD');
@@ -45,13 +60,29 @@ export class DharmaService {
             rawOffer.maxLtv,
         );
 
+        this.logger.info(`Collateral amount: ${collateralAmount}`);
+
         offer.setPrincipalPrice(principalPrice);
         offer.setCollateralPrice(collateralPrice);
         offer.setCollateralAmount(new BigNumber(collateralAmount.decimalAmount.toString()));
 
         const debtor = this.wallet.address.toLowerCase();
         await offer.signAsDebtor(debtor, false);
-        return offer.acceptAsDebtor(debtor);
+        const tx = await offer.acceptAsDebtor(debtor);
+
+        this.logger.info(`Filling lend offer with id ${offerId}`);
+        this.logger.info(`tx hash: ${tx.hash}`);
+
+        transactions.add({
+            name: 'fillLendOffer',
+            transactionObject: tx,
+        });
+
+        if (needAwaitMining) {
+            await transactions.wait();
+        }
+
+        return transactions;
     }
 
     private calculateCollateral(
@@ -99,6 +130,9 @@ export class DharmaService {
         const result = await Axios.get(url, {
             httpsAgent: new Agent({ rejectUnauthorized: false }),
         });
+
+        this.logger.info(`Rate recieved for pair ${source}/${target}: ${result.data.rate}`);
+
         return {
             value: result.data.rate,
             tokenAddress: result.data.targetCurrencyTokenAddress,
@@ -114,7 +148,7 @@ export class DharmaService {
     // TODO: TEST THIS THROUGHLY
     private async convertLendOfferToProxyInstance(relayerLendOffer: any) {
         if (relayerLendOffer.maxLtv === undefined) {
-            console.error('maxLtv is undefined in lend offer:', relayerLendOffer);
+            this.logger.error(`maxLtv is undefined in lend offer: ${JSON.stringify(relayerLendOffer)}`);
         }
 
         const parsedOffer = await this.loadAdapter.fromDebtOrder({
