@@ -1,9 +1,10 @@
 import { Get, Controller, Post, Query, Res, HttpStatus, ParseIntPipe, Param } from '@nestjs/common';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { DharmaService } from './dharma.service';
-import { ApiImplicitQuery } from '@nestjs/swagger';
+import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 
 @Controller('dharma')
+@ApiUseTags('Dharma @ Bloqboard')
 export class DharmaController {
     constructor(
         private readonly dharmaService: DharmaService,

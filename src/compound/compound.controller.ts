@@ -1,13 +1,14 @@
 import { Get, Controller, Post, Query, Res, HttpStatus } from '@nestjs/common';
 import { CompoundService } from './compound.service';
 import { TokenService } from '../token.service';
-import { ApiImplicitQuery } from '@nestjs/swagger';
+import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { TokenSymbol } from '../types';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
 @Controller('compound')
+@ApiUseTags('Compound')
 export class CompoundController {
     constructor(
         private readonly compoundService: CompoundService,

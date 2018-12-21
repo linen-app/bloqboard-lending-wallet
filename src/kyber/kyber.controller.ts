@@ -1,5 +1,5 @@
 import { Controller, Post, Query, Res, HttpStatus } from '@nestjs/common';
-import { ApiImplicitQuery } from '@nestjs/swagger';
+import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { TokenSymbol } from 'src/types';
 import { KyberService } from './kyber.service';
 import { TokenService } from 'src/token.service';
@@ -7,7 +7,8 @@ import { ParseBooleanPipe } from 'src/parseBoolean.pipe';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
-@Controller('kyber')
+@Controller('kyber-network')
+@ApiUseTags('Kyber Network')
 export class KyberController {
 
     constructor(

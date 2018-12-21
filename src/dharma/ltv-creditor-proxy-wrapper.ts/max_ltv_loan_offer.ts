@@ -25,7 +25,7 @@ const NULL_ECDSA_SIGNATURE = {
     v: 0,
 };
 
-export const MAX_LTV_LOAN_OFFER_ERRORS = {
+const MAX_LTV_LOAN_OFFER_ERRORS = {
     ALREADY_SIGNED_BY_CREDITOR: () =>
         `The creditor has already signed the loan offer.`,
     ALREADY_SIGNED_BY_DEBTOR: () =>
@@ -49,21 +49,21 @@ export const MAX_LTV_LOAN_OFFER_ERRORS = {
     INCORRECT_DEBTOR: (receivedDebtor, expectedDebtor) => `Received invalid debtor address ${receivedDebtor}. Expected: ${expectedDebtor}`,
 };
 
-export interface CreditorValues {
+interface CreditorValues {
     creditor: string;
     creditorSignature: ECDSASignature;
     expirationTimestampInSec: BigNumber;
 }
 
 // A price signed by the feed operator.
-export interface Price {
+interface Price {
     value: number;
     tokenAddress: string;
     timestamp: number;
     signature: ECDSASignature;
 }
 
-export interface MaxLTVData {
+interface MaxLTVData {
     collateralTokenAddress: string;
     collateralTokenIndex: BigNumber;
     collateralTokenSymbol: string;
@@ -85,7 +85,7 @@ export interface MaxLTVData {
     termsContract: string;
 }
 
-export type DurationUnit =
+type DurationUnit =
     | 'hour'
     | 'hours'
     | 'day'
@@ -97,7 +97,7 @@ export type DurationUnit =
     | 'year'
     | 'years';
 
-export interface DebtOrderParams {
+interface DebtOrderParams {
     principalAmount: number;
     principalToken: string;
     interestRate: number;
@@ -114,7 +114,7 @@ export interface DebtOrderParams {
     debtorFeeAmount?: number;
 }
 
-export interface MaxLTVParams extends DebtOrderParams {
+interface MaxLTVParams extends DebtOrderParams {
     maxLTV: number;
     collateralToken: string;
     priceProvider: string;
