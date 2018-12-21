@@ -5,11 +5,12 @@ import { stringify } from 'qs';
 import { Agent } from 'https';
 import { Wallet } from 'ethers';
 import { CollateralizedSimpleInterestLoanAdapter } from './collateralized-simple-interest-loan-adapter';
-import { TokenAmount, MaxLTVLoanOffer, TimeInterval, InterestRate } from 'dharma-max-ltv-fork/build/js/typescript/types';
-import { BigNumber } from 'dharma-max-ltv-fork/build/js/typescript/utils';
-import * as ProviderBridge from 'ethers-web3-bridge';
-import { MaxLTVData, CreditorValues } from 'dharma-max-ltv-fork/build/js/typescript/types/loan_offer/max_ltv_loan_offer';
-import { Price } from 'dharma-max-ltv-fork/build/js/types/LTVTypes';
+import { MaxLTVLoanOffer, MaxLTVData, CreditorValues, Price } from './ltv-creditor-proxy-wrapper.ts/max_ltv_loan_offer';
+import { TimeInterval } from './ltv-creditor-proxy-wrapper.ts/time_interval';
+import { TokenAmount } from './ltv-creditor-proxy-wrapper.ts/token_amount';
+import { BigNumber } from 'bignumber.js';
+import { InterestRate } from './ltv-creditor-proxy-wrapper.ts/interest_rate';
+import { TransactionResponse } from 'ethers/providers';
 
 @Injectable()
 export class DharmaService {
@@ -29,7 +30,7 @@ export class DharmaService {
         return res;
     }
 
-    async fillLendOffer(offerId: string): Promise<string> {
+    async fillLendOffer(offerId: string): Promise<TransactionResponse> {
         const rawOffer = await this.fetchLendOffer(offerId);
         const { offer, principal, collateral } = await this.convertLendOfferToProxyInstance(rawOffer);
 
@@ -50,9 +51,7 @@ export class DharmaService {
 
         const debtor = this.wallet.address.toLowerCase();
         await offer.signAsDebtor(debtor, false);
-        const txHash = await offer.acceptAsDebtor(debtor, { gasPrice: '5000000000', from: debtor });
-
-        return txHash;
+        return offer.acceptAsDebtor(debtor);
     }
 
     private calculateCollateral(
@@ -62,7 +61,7 @@ export class DharmaService {
         collateralTokenSymbol: string,
         ltv: number,
     ): TokenAmount {
-        const usdAmount = principalAmount.times(principalAmountUsdRate);
+        const usdAmount = principalAmount.mul(principalAmountUsdRate);
         const usdCollateral = usdAmount.div(new BigNumber(ltv).div(100));
         const collateral = usdCollateral.div(collateralUsdRate).mul(1.01);
         return TokenAmount.fromRaw(collateral, collateralTokenSymbol);
@@ -172,7 +171,7 @@ export class DharmaService {
 
         const result = new MaxLTVLoanOffer(
             this.creditorProxyAddress,
-            new ProviderBridge(this.wallet.provider, this.wallet),
+            this.wallet,
             lendOfferParams,
             creditorValued,
         );

@@ -45,7 +45,7 @@ describe('DharmaService', () => {
     });
 
     it('should fill lend offer', async () => {
-        const lendOffers = await service.getLendOffers();
-        await service.fillLendOffer('0xdad356e61d304b2cc919a9f1ae2792b38a9e215cc8ec7a9f7d2992d3a0c21e8d'); // lendOffers[0].id);
+        const tx = await service.fillLendOffer('0x52f39ab2d36b295cb02af4a13089842cf61a4ea771357a08d749c22f4bf6073e');
+        expect(tx.hash).toBeTruthy();
     });
 });

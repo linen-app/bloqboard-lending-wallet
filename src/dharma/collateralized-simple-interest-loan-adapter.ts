@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Contract } from 'ethers';
-import { BigNumber } from 'dharma-max-ltv-fork/build/js/typescript/utils';
+import { BigNumber } from 'bignumber.js';
 
 type AmortizationUnit = 'hours' | 'days' | 'weeks' | 'months' | 'years';
 
