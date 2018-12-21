@@ -49,21 +49,21 @@ const MAX_LTV_LOAN_OFFER_ERRORS = {
     INCORRECT_DEBTOR: (receivedDebtor, expectedDebtor) => `Received invalid debtor address ${receivedDebtor}. Expected: ${expectedDebtor}`,
 };
 
-interface CreditorValues {
+export interface CreditorValues {
     creditor: string;
     creditorSignature: ECDSASignature;
     expirationTimestampInSec: BigNumber;
 }
 
 // A price signed by the feed operator.
-interface Price {
+export interface Price {
     value: number;
     tokenAddress: string;
     timestamp: number;
     signature: ECDSASignature;
 }
 
-interface MaxLTVData {
+export interface MaxLTVData {
     collateralTokenAddress: string;
     collateralTokenIndex: BigNumber;
     collateralTokenSymbol: string;

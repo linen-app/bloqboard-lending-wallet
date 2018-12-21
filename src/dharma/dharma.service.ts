@@ -4,7 +4,7 @@ import Axios from 'axios';
 import { stringify } from 'qs';
 import { Agent } from 'https';
 import { Wallet } from 'ethers';
-import { CollateralizedSimpleInterestLoanAdapter, CollateralizedSimpleInterestLoanOrder } from './collateralized-simple-interest-loan-adapter';
+import { CollateralizedSimpleInterestLoanAdapter } from './collateralized-simple-interest-loan-adapter';
 import { MaxLTVLoanOffer, MaxLTVData, CreditorValues, Price } from './ltv-creditor-proxy-wrapper.ts/max_ltv_loan_offer';
 import { TimeInterval } from './ltv-creditor-proxy-wrapper.ts/time_interval';
 import { TokenAmount } from './ltv-creditor-proxy-wrapper.ts/token_amount';
