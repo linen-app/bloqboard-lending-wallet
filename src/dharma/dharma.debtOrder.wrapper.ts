@@ -2,82 +2,118 @@ import { ECDSASignature } from './models/ECDSASignature';
 import { Contract } from 'ethers';
 import { TransactionRequest, TransactionResponse } from 'ethers/providers';
 import { DebtOrderData } from './models/DebtOrderData';
+import { BigNumber } from 'ethers/utils';
+import * as Web3Utils from 'web3-utils';
+import { Inject, Injectable } from '@nestjs/common';
 
-/**
- * Decorate a given debt order with various higher level functions.
- */
-export class DebtOrderWrapper {
+export interface IDebtOrderWrapper {
+    fill(txOpts: TransactionRequest): Promise<TransactionResponse>;
+    repay(amount: BigNumber, txOpts: TransactionRequest): Promise<TransactionResponse>;
+    returnCollateral(txOpts: TransactionRequest): Promise<TransactionResponse>;
+}
+
+@Injectable()
+export class DebtOrderWrapperFactory {
     constructor(
-        private readonly debtOrderData: DebtOrderData,
-        private readonly debtKernel: Contract,
+        @Inject('dharma-kernel-contract') private readonly dharmaKernel: Contract,
+        @Inject('repayment-router-contract') private readonly repaymentRouter: Contract,
+        @Inject('collateralizer-contract') private readonly collateralizer: Contract,
     ) { }
 
-    async fillDebtOrder(txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
-        // TODO: add asserts for filliability
+    wrap(debtOrderData: DebtOrderData): IDebtOrderWrapper {
+        const getIssuanceCommitmentHash = (): string =>
+            Web3Utils.soliditySHA3(
+                debtOrderData.issuanceVersion,
+                debtOrderData.debtor,
+                debtOrderData.underwriter,
+                debtOrderData.underwriterRiskRating,
+                debtOrderData.termsContract,
+                debtOrderData.termsContractParameters,
+                debtOrderData.salt,
+            );
 
-        const tx = await this.debtKernel.fillDebtOrder(
-            this.debtOrderData.creditor,
-            this.getOrderAddresses(),
-            this.getOrderValues(),
-            this.getOrderBytes32(),
-            this.getSignaturesV(),
-            this.getSignaturesR(),
-            this.getSignaturesS(),
-            txOpts,
-        );
+        const getOrderAddresses = (): string[] =>
+            [
+                debtOrderData.issuanceVersion,
+                debtOrderData.debtor,
+                debtOrderData.underwriter,
+                debtOrderData.termsContract,
+                debtOrderData.principalToken,
+                debtOrderData.relayer,
+            ];
 
-        return tx;
-    }
+        const getOrderValues = (): string[] =>
+            [
+                debtOrderData.underwriterRiskRating,
+                debtOrderData.salt,
+                debtOrderData.principalAmount,
+                debtOrderData.underwriterFee,
+                debtOrderData.relayerFee,
+                debtOrderData.creditorFee,
+                debtOrderData.debtorFee,
+                debtOrderData.expirationTimestampInSec,
+            ].map(x => x.toString());
 
-    private getOrderAddresses(): string[] {
-        return [
-            this.debtOrderData.issuanceVersion,
-            this.debtOrderData.debtor,
-            this.debtOrderData.underwriter,
-            this.debtOrderData.termsContract,
-            this.debtOrderData.principalToken,
-            this.debtOrderData.relayer,
-        ];
-    }
+        const getOrderBytes32 = (): string[] => [debtOrderData.termsContractParameters];
 
-    private getOrderValues(): string[] {
-        return [
-            this.debtOrderData.underwriterRiskRating,
-            this.debtOrderData.salt,
-            this.debtOrderData.principalAmount,
-            this.debtOrderData.underwriterFee,
-            this.debtOrderData.relayerFee,
-            this.debtOrderData.creditorFee,
-            this.debtOrderData.debtorFee,
-            this.debtOrderData.expirationTimestampInSec,
-        ].map(x => x.toString());
-    }
+        const getSignaturesR = (): string[] => {
+            const [debtorSignature, creditorSignature, underwriterSignature] = getSignatures();
 
-    private getOrderBytes32(): string[] {
-        return [this.debtOrderData.termsContractParameters];
-    }
+            return [debtorSignature.r, creditorSignature.r, underwriterSignature.r];
+        };
 
-    private getSignaturesR(): string[] {
-        const [debtorSignature, creditorSignature, underwriterSignature] = this.getSignatures();
+        const getSignaturesS = (): string[] => {
+            const [debtorSignature, creditorSignature, underwriterSignature] = getSignatures();
 
-        return [debtorSignature.r, creditorSignature.r, underwriterSignature.r];
-    }
+            return [debtorSignature.s, creditorSignature.s, underwriterSignature.s];
+        };
 
-    private getSignaturesS(): string[] {
-        const [debtorSignature, creditorSignature, underwriterSignature] = this.getSignatures();
+        const getSignaturesV = (): number[] => {
+            const [debtorSignature, creditorSignature, underwriterSignature] = getSignatures();
 
-        return [debtorSignature.s, creditorSignature.s, underwriterSignature.s];
-    }
+            return [debtorSignature.v, creditorSignature.v, underwriterSignature.v];
+        };
 
-    private getSignaturesV(): number[] {
-        const [debtorSignature, creditorSignature, underwriterSignature] = this.getSignatures();
+        const getSignatures = (): ECDSASignature[] => {
+            const { debtorSignature, creditorSignature, underwriterSignature } = debtOrderData;
 
-        return [debtorSignature.v, creditorSignature.v, underwriterSignature.v];
-    }
+            return [debtorSignature, creditorSignature, underwriterSignature];
+        };
 
-    private getSignatures(): ECDSASignature[] {
-        const { debtorSignature, creditorSignature, underwriterSignature } = this.debtOrderData;
+        return {
+            async fill(txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+                // TODO: add asserts for filliability
 
-        return [debtorSignature, creditorSignature, underwriterSignature];
+                return this.debtKernel.fillDebtOrder(
+                    debtOrderData.creditor,
+                    getOrderAddresses(),
+                    getOrderValues(),
+                    getOrderBytes32(),
+                    getSignaturesV(),
+                    getSignaturesR(),
+                    getSignaturesS(),
+                    txOpts,
+                );
+            },
+
+            repay(amount: BigNumber, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+                // TODO: determine collateral automatically
+
+                return this.repaymentRouter.repay(
+                    getIssuanceCommitmentHash(),
+                    amount.toString(),
+                    debtOrderData.principalToken,
+                    txOpts,
+                );
+            },
+
+            returnCollateral(txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+
+                return this.collateralizer.returnCollateral(
+                    getIssuanceCommitmentHash(),
+                    txOpts,
+                );
+            },
+        };
     }
 }

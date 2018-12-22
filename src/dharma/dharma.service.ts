@@ -14,7 +14,7 @@ import { TransactionLog } from '../../src/TransactionLog';
 import { TokenService } from '../../src/token.service';
 import { Logger } from 'winston';
 import { RelayerDebtOrder, Status } from './models/relayer-debt-order';
-import { DebtOrderWrapper } from './dharma.debtOrder.wrapper';
+import { IDebtOrderWrapper, DebtOrderWrapperFactory } from './dharma.debtOrder.wrapper';
 
 @Injectable()
 export class DharmaService {
@@ -24,13 +24,12 @@ export class DharmaService {
         @Inject('bloqboard-uri') private readonly bloqboardUri: string,
         @Inject('currency-rates-uri') private readonly currencyRatesUrl: string,
         @Inject('dharma-kernel-contract') private readonly dharmaKernel: Contract,
-        @Inject('repayment-router-contract') private readonly repaymentRouter: Contract,
-        @Inject('collateralizer-contract') private readonly collateralizer: Contract,
         @Inject('creditor-proxy-address') private readonly creditorProxyAddress: Address,
         @Inject('token-transfer-proxy-address') private readonly tokenTransferProxyAddress: Address,
         @Inject('winston') private readonly logger: Logger,
         private readonly tokenService: TokenService,
         private readonly loanAdapter: CollateralizedSimpleInterestLoanAdapter,
+        private readonly debtOrderWrapperFactory: DebtOrderWrapperFactory,
     ) { }
 
     async getDebtOrders(
@@ -125,9 +124,7 @@ export class DharmaService {
         await this.tokenService.addUnlockTransactionIfNeeded(order.principalTokenSymbol as TokenSymbol, this.tokenTransferProxyAddress, transactions);
 
         order.creditor = this.wallet.address;
-        const wrapper = new DebtOrderWrapper(order, this.dharmaKernel);
-
-        const tx = await wrapper.fillDebtOrder({ nonce: transactions.getNextNonce() });
+        const tx = await this.debtOrderWrapperFactory.wrap(order).fill({ nonce: transactions.getNextNonce() });
 
         this.logger.info(`Filling debt request with id ${requestId}`);
         this.logger.info(`tx hash: ${tx.hash}`);
