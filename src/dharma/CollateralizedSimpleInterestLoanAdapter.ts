@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Contract } from 'ethers';
 import { BigNumber } from 'bignumber.js';
-import { RelayerDebtOrder } from './models/relayer-debt-order';
+import { RelayerDebtOrder } from './models/RelayerDebtOrder';
 import { DebtOrderData } from './models/DebtOrderData';
 import { ECDSASignature } from './models/ECDSASignature';
 

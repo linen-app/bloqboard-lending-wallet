@@ -8,11 +8,11 @@ const { LTVCreditorProxy } = contractArtifacts.latest;
 
 // Types
 import { BigNumber } from 'bignumber.js';
-import { TokenAmount } from '../models/token_amount';
+import { TokenAmount } from '../models/TokenAmount';
 import { SimpleInterestContractTerms, CollateralizedContractTerms, CollateralizedSimpleInterestTermsParameters } from './TermsContractParameters';
-import { TimeInterval } from '../models/time_interval';
+import { TimeInterval } from '../models/TimeInterval';
 import { TransactionResponse, TransactionRequest } from 'ethers/providers';
-import { InterestRate } from '../models/interest_rate';
+import { InterestRate } from '../models/InterestRate';
 import { ECDSASignature, ecSign } from '../models/ECDSASignature';
 import { LTVParams } from '../models/LTVTypes';
 
@@ -80,41 +80,6 @@ export interface MaxLTVData {
     termsContract: string;
 }
 
-type DurationUnit =
-    | 'hour'
-    | 'hours'
-    | 'day'
-    | 'days'
-    | 'week'
-    | 'weeks'
-    | 'month'
-    | 'months'
-    | 'year'
-    | 'years';
-
-interface DebtOrderParams {
-    principalAmount: number;
-    principalToken: string;
-    interestRate: number;
-    termDuration: number;
-    termUnit: DurationUnit;
-    expiresInDuration: number;
-    expiresInUnit: DurationUnit;
-    relayerAddress?: string;
-    relayerFeeAmount?: number;
-    creditorFeeAmount?: number;
-    underwriterAddress?: string;
-    underwriterRiskRating?: number;
-    underwriterFeeAmount?: number;
-    debtorFeeAmount?: number;
-}
-
-interface MaxLTVParams extends DebtOrderParams {
-    maxLTV: number;
-    collateralToken: string;
-    priceProvider: string;
-}
-
 export class MaxLTVLoanOffer {
 
     // public static generateSalt(): BigNumber {
@@ -132,10 +97,13 @@ export class MaxLTVLoanOffer {
     private expirationTimestampInSec?: BigNumber;
     private principalPrice?: Price;
     private termsContractParameters?: string;
-    private readonly wallet: Wallet;
 
-    constructor(private readonly ltvProxyAddress: string, wallet: Wallet, private readonly data: MaxLTVData, creditorValues?: CreditorValues) {
-        this.wallet = wallet;
+    constructor(
+        private readonly ltvProxyAddress: string,
+        private readonly wallet: Wallet,
+        private readonly data: MaxLTVData,
+        creditorValues?: CreditorValues,
+    ) {
 
         if (creditorValues) {
             this.creditor = creditorValues.creditor;
@@ -225,18 +193,6 @@ export class MaxLTVLoanOffer {
     }
 
     /**
-     * Gets the principal price.
-     *
-     * @example
-     * loanOffer.getPrincipalPrice();
-     *
-     * @return {Price}
-     */
-    public getPrincipalPrice(): Price {
-        return this.principalPrice;
-    }
-
-    /**
      * Sets the collateral price.
      *
      * @throws Throws if the price is for the wrong token
@@ -258,18 +214,6 @@ export class MaxLTVLoanOffer {
         // TODO: assert signed time is within some delta of current time
 
         this.collateralPrice = collateralPrice;
-    }
-
-    /**
-     * Gets the collateral price.
-     *
-     * @example
-     * loanOffer.getCollateralPrice();
-     *
-     * @return {Price}
-     */
-    public getCollateralPrice(): Price {
-        return this.principalPrice;
     }
 
     /**
@@ -299,18 +243,6 @@ export class MaxLTVLoanOffer {
 
         // calculate the terms contract parameters, since the collateral amount has been set
         this.termsContractParameters = this.getTermsContractParameters();
-    }
-
-    /**
-     * Gets the collateral amount.
-     *
-     * @example
-     * loanOffer.getCollateralAmount();
-     *
-     * @return {Price}
-     */
-    public getCollateralAmount(): number {
-        return this.collateralAmount.toNumber();
     }
 
     /**

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DharmaService } from './dharma.service';
+import { DharmaService } from './DharmaService';
 import { ethers } from 'ethers';
-import { CollateralizedSimpleInterestLoanAdapter } from './collateralized-simple-interest-loan-adapter';
+import { CollateralizedSimpleInterestLoanAdapter } from './CollateralizedSimpleInterestLoanAdapter';
 import * as Account from '../../resources/account.json';
 import * as Tokens from '../../resources/tokens.json';
 import * as CreditorProxy from '../../resources/dharma/creditor-proxy.json';
@@ -12,8 +12,9 @@ import * as DharmaAddressBook from 'dharma-address-book';
 import { WinstonModule } from 'nest-winston';
 import winston = require('winston');
 import { format } from 'winston';
-import { TokenService } from '../token.service';
+import { TokenService } from '../tokens/token.service';
 import { TokenMetadata, TokenSymbol } from '../types';
+import { DebtOrderWrapper } from './DebtOrderWrapper';
 
 describe('DharmaService', () => {
     let service: DharmaService;
@@ -39,6 +40,18 @@ describe('DharmaService', () => {
             wallet,
         );
 
+        const repaymentRouterContract = new ethers.Contract(
+            dharmaAddresses.RepaymentRouter,
+            ContractArtifacts.latest.RepaymentRouter,
+            wallet,
+        );
+
+        const collateralizedContract = new ethers.Contract(
+            dharmaAddresses.Collateralizer,
+            ContractArtifacts.latest.Collateralizer,
+            wallet,
+        );
+
         const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
 
         const module: TestingModule = await Test.createTestingModule({
@@ -57,9 +70,12 @@ describe('DharmaService', () => {
                 DharmaService,
                 TokenService,
                 CollateralizedSimpleInterestLoanAdapter,
+                DebtOrderWrapper,
                 { provide: 'bloqboard-uri', useValue: BloqboardAPI.networks[NETWORK] },
                 { provide: 'currency-rates-uri', useValue: CurrencyRatesAPI.networks[NETWORK]},
                 { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
+                { provide: 'repayment-router-contract', useValue: repaymentRouterContract },
+                { provide: 'collateralizer-contract', useValue: collateralizedContract },
                 { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
                 { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
                 { provide: 'dharma-token-registry-contract', useValue: tokenRegistryContract},

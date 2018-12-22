@@ -1,10 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
-import * as ERC20 from '../resources/erc20.json';
+import * as ERC20 from '../../resources/erc20.json';
 import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
-import { TokenSymbol, TokenMetadata, Amount, Address } from './types';
+import { TokenSymbol, TokenMetadata, Amount, Address } from '../types';
 import { BigNumber } from 'ethers/utils';
 import { Logger } from 'winston';
-import { TransactionLog } from './TransactionLog.js';
+import { TransactionLog } from '../TransactionLog.js';
 
 @Injectable()
 export class TokenService {

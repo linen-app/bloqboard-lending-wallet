@@ -1,6 +1,6 @@
 import { Get, Controller, Post, Query, Res, HttpStatus } from '@nestjs/common';
 import { CompoundService } from './compound.service';
-import { TokenService } from '../token.service';
+import { TokenService } from '../tokens/TokenService';
 import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { TokenSymbol } from '../types';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';

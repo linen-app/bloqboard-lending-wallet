@@ -1,13 +1,15 @@
 import { Get, Controller, Post, Query, Res, HttpStatus, ParseIntPipe, Param } from '@nestjs/common';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
-import { DharmaService } from './dharma.service';
+import { DharmaLoanRequestService } from './DharmaLoanRequestService';
 import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
+import { DharmaLendOffersService } from './DharmaLendOffersService';
 
 @Controller('dharma')
 @ApiUseTags('Dharma @ Bloqboard')
 export class DharmaController {
     constructor(
-        private readonly dharmaService: DharmaService,
+        private readonly dharmaLoanRequestsService: DharmaLoanRequestService,
+        private readonly dharmaLendOffersService: DharmaLendOffersService,
     ) { }
 
     @Get('debt-orders')
@@ -15,7 +17,7 @@ export class DharmaController {
         @Query('minUsdAmount', ParseIntPipe) minUsdAmount: number,
         @Query('maxUsdAmount', ParseIntPipe) maxUsdAmount: number,
     ): Promise<any> {
-        const debtOrders = await this.dharmaService.getDebtOrders(null, null, minUsdAmount, maxUsdAmount);
+        const debtOrders = await this.dharmaLoanRequestsService.getDebtOrders(null, null, minUsdAmount, maxUsdAmount);
 
         return debtOrders;
     }
@@ -27,7 +29,7 @@ export class DharmaController {
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<any> {
-        const result = await this.dharmaService.fillDebtRequest(debtRequestId, needAwaitMining);
+        const result = await this.dharmaLoanRequestsService.fillDebtRequest(debtRequestId, needAwaitMining);
         return res.status(HttpStatus.CREATED).json(result);
     }
 
@@ -36,7 +38,7 @@ export class DharmaController {
         @Query('minUsdAmount', ParseIntPipe) minUsdAmount: number,
         @Query('maxUsdAmount', ParseIntPipe) maxUsdAmount: number,
     ): Promise<any> {
-        const offers = await this.dharmaService.getLendOffers(null, null, minUsdAmount, maxUsdAmount);
+        const offers = await this.dharmaLendOffersService.getLendOffers(null, null, minUsdAmount, maxUsdAmount);
 
         return offers;
     }
@@ -48,7 +50,7 @@ export class DharmaController {
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<any> {
-        const result = await this.dharmaService.fillLendOffer(lendOfferId, needAwaitMining);
+        const result = await this.dharmaLendOffersService.fillLendOffer(lendOfferId, needAwaitMining);
         return res.status(HttpStatus.CREATED).json(result);
     }
 }

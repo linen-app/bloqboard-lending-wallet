@@ -1,4 +1,9 @@
 import { Address } from '../../types';
+/*
+RelayerDebtOrder -> CollateralizedSimpleInterestLoanOrder -> IDebtOrderWrapper (DebtOrderData)
+                                                          -> MaxLTVLoanOffer (MaxLTVData)
+                                                          -> [humanReadableResponse]
+*/
 
 export enum Status {
     SignedByDebtor = 'SignedByDebtor',
