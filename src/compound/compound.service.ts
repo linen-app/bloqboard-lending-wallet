@@ -38,13 +38,7 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const transactions = new TransactionLog();
 
-        if (await this.tokenService.isTokenLockedForSpender(symbol, this.moneyMarketContract.address)) {
-            const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
-            transactions.add({
-                name: 'unlock',
-                transactionObject: unlockTx,
-            });
-        }
+        await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
             token.address,
@@ -110,13 +104,7 @@ export class CompoundService {
         const transactions = new TransactionLog();
         const token = this.tokenService.getTokenBySymbol(symbol);
 
-        if (await this.tokenService.isTokenLockedForSpender(symbol, this.moneyMarketContract.address)) {
-            const unlockTx = await this.tokenService.unlockToken(symbol, this.moneyMarketContract.address);
-            transactions.add({
-                name: 'unlock',
-                transactionObject: unlockTx,
-            });
-        }
+        await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const neededAmount = rawAmount.eq(ethers.constants.MaxUint256) ? (await this.getBorrowBalance(symbol)) : rawAmount;
         const balance = await this.tokenService.getTokenBalance(symbol);

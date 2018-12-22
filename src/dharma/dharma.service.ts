@@ -24,6 +24,8 @@ export class DharmaService {
         @Inject('bloqboard-uri') private readonly bloqboardUri: string,
         @Inject('currency-rates-uri') private readonly currencyRatesUrl: string,
         @Inject('dharma-kernel-contract') private readonly dharmaKernel: Contract,
+        @Inject('repayment-router-contract') private readonly repaymentRouter: Contract,
+        @Inject('collateralizer-contract') private readonly collateralizer: Contract,
         @Inject('creditor-proxy-address') private readonly creditorProxyAddress: Address,
         @Inject('token-transfer-proxy-address') private readonly tokenTransferProxyAddress: Address,
         @Inject('winston') private readonly logger: Logger,
@@ -77,11 +79,7 @@ export class DharmaService {
         const rawOffer = await this.fetchOrder(offerId);
         const { offer, principal, collateral } = await this.convertLendOfferToProxyInstance(rawOffer);
 
-        const collateralSymbol = collateral.tokenSymbol as TokenSymbol;
-        if (await this.tokenService.isTokenLockedForSpender(collateralSymbol, this.tokenTransferProxyAddress)) {
-            const unlockTx = await this.tokenService.unlockToken(collateralSymbol, this.tokenTransferProxyAddress);
-            transactions.add({ name: 'unlock', transactionObject: unlockTx });
-        }
+        await this.tokenService.addUnlockTransactionIfNeeded(collateral.tokenSymbol as TokenSymbol, this.tokenTransferProxyAddress, transactions);
 
         const principalPrice = await this.getSignedRate(principal.tokenSymbol, 'USD');
         const collateralPrice = await this.getSignedRate(collateral.tokenSymbol, 'USD');
@@ -102,7 +100,7 @@ export class DharmaService {
 
         const debtor = this.wallet.address.toLowerCase();
         await offer.signAsDebtor(debtor, false);
-        const tx = await offer.acceptAsDebtor(debtor);
+        const tx = await offer.acceptAsDebtor(debtor, { nonce: transactions.getNextNonce() });
 
         this.logger.info(`Filling lend offer with id ${offerId}`);
         this.logger.info(`tx hash: ${tx.hash}`);
@@ -124,16 +122,12 @@ export class DharmaService {
         const rawOrder = await this.fetchOrder(requestId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
 
-        const principalSymbol = order.principalTokenSymbol as TokenSymbol;
-        if (await this.tokenService.isTokenLockedForSpender(principalSymbol, this.tokenTransferProxyAddress)) {
-            const unlockTx = await this.tokenService.unlockToken(principalSymbol, this.tokenTransferProxyAddress);
-            transactions.add({ name: 'unlock', transactionObject: unlockTx });
-        }
+        await this.tokenService.addUnlockTransactionIfNeeded(order.principalTokenSymbol as TokenSymbol, this.tokenTransferProxyAddress, transactions);
 
         order.creditor = this.wallet.address;
         const wrapper = new DebtOrderWrapper(order, this.dharmaKernel);
 
-        const tx = await wrapper.fillDebtOrder();
+        const tx = await wrapper.fillDebtOrder({ nonce: transactions.getNextNonce() });
 
         this.logger.info(`Filling debt request with id ${requestId}`);
         this.logger.info(`tx hash: ${tx.hash}`);

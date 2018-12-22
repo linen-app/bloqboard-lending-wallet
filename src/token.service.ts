@@ -4,6 +4,7 @@ import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
 import { TokenSymbol, TokenMetadata, Amount, Address } from './types';
 import { BigNumber } from 'ethers/utils';
 import { Logger } from 'winston';
+import { TransactionLog } from './TransactionLog.js';
 
 @Injectable()
 export class TokenService {
@@ -72,5 +73,12 @@ export class TokenService {
         this.logger.info(`Locking ${symbol} for spender: ${spender}`);
 
         return tx;
+    }
+
+    async addUnlockTransactionIfNeeded(symbol: TokenSymbol, spender: Address, transactions: TransactionLog) {
+        if (await this.isTokenLockedForSpender(symbol, spender)) {
+            const unlockTx = await this.unlockToken(symbol, spender);
+            transactions.add({ name: 'unlock', transactionObject: unlockTx });
+        }
     }
 }

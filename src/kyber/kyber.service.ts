@@ -27,10 +27,7 @@ export class KyberService {
         const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
         const transactions = new TransactionLog();
 
-        if (await this.tokenService.isTokenLockedForSpender(tokenSymbolToSell, this.kyberContract.address)) {
-            const unlockTx = await this.tokenService.unlockToken(tokenSymbolToSell, this.kyberContract.address, nonce);
-            transactions.add({ name: 'unlock', transactionObject: unlockTx });
-        }
+        await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions);
 
         const { slippageRate } = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, rawAmount);
 
@@ -67,10 +64,7 @@ export class KyberService {
         const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
         const transactions = new TransactionLog();
 
-        if (await this.tokenService.isTokenLockedForSpender(tokenSymbolToSell, this.kyberContract.address)) {
-            const unlockTx = await this.tokenService.unlockToken(tokenSymbolToSell, this.kyberContract.address, nonce);
-            transactions.add({ name: 'unlock', transactionObject: unlockTx });
-        }
+        await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions);
 
         const approximateAmountToSell = await this.calcApproximateAmountToSell(rawAmount, tokenToBuy, tokenToSell);
         const { amountToSell, rate } = await this.calcAmountToSell(rawAmount, approximateAmountToSell, tokenToBuy, tokenToSell);
