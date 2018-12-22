@@ -33,6 +33,12 @@ describe('DharmaService', () => {
             wallet,
         );
 
+        const debtKernelContract = new ethers.Contract(
+            dharmaAddresses.DebtKernel,
+            ContractArtifacts.latest.DebtKernel,
+            wallet,
+        );
+
         const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
 
         const module: TestingModule = await Test.createTestingModule({
@@ -53,7 +59,7 @@ describe('DharmaService', () => {
                 CollateralizedSimpleInterestLoanAdapter,
                 { provide: 'bloqboard-uri', useValue: BloqboardAPI.networks[NETWORK] },
                 { provide: 'currency-rates-uri', useValue: CurrencyRatesAPI.networks[NETWORK]},
-                { provide: 'dharma-kernel-address', useValue: dharmaAddresses.DebtKernel },
+                { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
                 { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
                 { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
                 { provide: 'dharma-token-registry-contract', useValue: tokenRegistryContract},
@@ -75,6 +81,11 @@ describe('DharmaService', () => {
 
     xit('should fill lend offer', async () => {
         const tx = await service.fillLendOffer('0x52f39ab2d36b295cb02af4a13089842cf61a4ea771357a08d749c22f4bf6073e', false);
+        expect(tx.transactions.pop().transactionObject.hash).toBeTruthy();
+    });
+
+    it('should fill debt request', async () => {
+        const tx = await service.fillDebtRequest('0x32ba307cb3d3bf2840c1119f5846c05933a985d4731a91164370252cb94f7aa0', false);
         expect(tx.transactions.pop().transactionObject.hash).toBeTruthy();
     });
 });

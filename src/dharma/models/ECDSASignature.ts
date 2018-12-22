@@ -1,10 +1,16 @@
-import { Signer, utils } from 'ethers';
+import { Signer, utils, ethers } from 'ethers';
 import * as Web3Utils from 'web3-utils';
 
-export interface ECDSASignature {
+export class ECDSASignature {
     r: string;
     s: string;
     v: number;
+
+    static readonly NULL_SIGNATURE = {
+        r: ethers.utils.formatBytes32String(''),
+        s: ethers.utils.formatBytes32String(''),
+        v: 0,
+    };
 }
 
 export async function ecSign(signer: Signer, message: string, addPrefix: boolean): Promise<ECDSASignature> {

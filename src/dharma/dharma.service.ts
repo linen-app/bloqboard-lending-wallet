@@ -3,17 +3,18 @@ import { TokenSymbol, Address } from 'src/types';
 import Axios from 'axios';
 import { stringify } from 'qs';
 import { Agent } from 'https';
-import { Wallet } from 'ethers';
+import { Wallet, Contract } from 'ethers';
 import { CollateralizedSimpleInterestLoanAdapter } from './collateralized-simple-interest-loan-adapter';
-import { MaxLTVLoanOffer, MaxLTVData, CreditorValues, Price } from './ltv-creditor-proxy-wrapper.ts/max_ltv_loan_offer';
-import { TimeInterval } from './ltv-creditor-proxy-wrapper.ts/time_interval';
-import { TokenAmount } from './ltv-creditor-proxy-wrapper.ts/token_amount';
+import { MaxLTVLoanOffer, MaxLTVData, CreditorValues, Price } from './ltv-creditor-proxy-wrapper/max_ltv_loan_offer';
+import { TimeInterval } from './models/time_interval';
+import { TokenAmount } from './models/token_amount';
 import { BigNumber } from 'bignumber.js';
-import { InterestRate } from './ltv-creditor-proxy-wrapper.ts/interest_rate';
+import { InterestRate } from './models/interest_rate';
 import { TransactionLog } from '../../src/TransactionLog';
 import { TokenService } from '../../src/token.service';
 import { Logger } from 'winston';
-import { RelayerDebtOrder, Status } from './relayer-debt-order';
+import { RelayerDebtOrder, Status } from './models/relayer-debt-order';
+import { DebtOrderWrapper } from './dharma.debtOrder.wrapper';
 
 @Injectable()
 export class DharmaService {
@@ -22,12 +23,12 @@ export class DharmaService {
         @Inject('wallet') private readonly wallet: Wallet,
         @Inject('bloqboard-uri') private readonly bloqboardUri: string,
         @Inject('currency-rates-uri') private readonly currencyRatesUrl: string,
-        @Inject('dharma-kernel-address') private readonly dharmaKernelAddress: Address,
+        @Inject('dharma-kernel-contract') private readonly dharmaKernel: Contract,
         @Inject('creditor-proxy-address') private readonly creditorProxyAddress: Address,
         @Inject('token-transfer-proxy-address') private readonly tokenTransferProxyAddress: Address,
         @Inject('winston') private readonly logger: Logger,
         private readonly tokenService: TokenService,
-        private readonly loadAdapter: CollateralizedSimpleInterestLoanAdapter,
+        private readonly loanAdapter: CollateralizedSimpleInterestLoanAdapter,
     ) { }
 
     async getDebtOrders(
@@ -36,7 +37,7 @@ export class DharmaService {
         const res = await this.fetchOrders(Status.SignedByDebtor, principalTokenSymbol, collateralTokenSymbol, minUsdAmount, maxUsdAmount);
 
         const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
-            this.loadAdapter.fromRelayerDebtOrder(relayerOrder)
+            this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
                 .then(x => ({
                     id: relayerOrder.id,
                     principal: TokenAmount.fromRaw(x.principalAmount, x.principalTokenSymbol).toString(),
@@ -56,7 +57,7 @@ export class DharmaService {
         const res = await this.fetchOrders(Status.SignedByCreditor, principalTokenSymbol, collateralTokenSymbol, minUsdAmount, maxUsdAmount);
 
         const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
-            this.loadAdapter.fromRelayerDebtOrder(relayerOrder)
+            this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
                 .then(x => ({
                     id: relayerOrder.id,
                     principal: TokenAmount.fromRaw(x.principalAmount, x.principalTokenSymbol).toString(),
@@ -79,10 +80,7 @@ export class DharmaService {
         const collateralSymbol = collateral.tokenSymbol as TokenSymbol;
         if (await this.tokenService.isTokenLockedForSpender(collateralSymbol, this.tokenTransferProxyAddress)) {
             const unlockTx = await this.tokenService.unlockToken(collateralSymbol, this.tokenTransferProxyAddress);
-            transactions.add({
-                name: 'unlock',
-                transactionObject: unlockTx,
-            });
+            transactions.add({ name: 'unlock', transactionObject: unlockTx });
         }
 
         const principalPrice = await this.getSignedRate(principal.tokenSymbol, 'USD');
@@ -107,6 +105,37 @@ export class DharmaService {
         const tx = await offer.acceptAsDebtor(debtor);
 
         this.logger.info(`Filling lend offer with id ${offerId}`);
+        this.logger.info(`tx hash: ${tx.hash}`);
+
+        transactions.add({
+            name: 'fillLendOffer',
+            transactionObject: tx,
+        });
+
+        if (needAwaitMining) {
+            await transactions.wait();
+        }
+
+        return transactions;
+    }
+
+    async fillDebtRequest(requestId: string, needAwaitMining: boolean): Promise<TransactionLog> {
+        const transactions = new TransactionLog();
+        const rawOrder = await this.fetchOrder(requestId);
+        const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
+
+        const principalSymbol = order.principalTokenSymbol as TokenSymbol;
+        if (await this.tokenService.isTokenLockedForSpender(principalSymbol, this.tokenTransferProxyAddress)) {
+            const unlockTx = await this.tokenService.unlockToken(principalSymbol, this.tokenTransferProxyAddress);
+            transactions.add({ name: 'unlock', transactionObject: unlockTx });
+        }
+
+        order.creditor = this.wallet.address;
+        const wrapper = new DebtOrderWrapper(order, this.dharmaKernel);
+
+        const tx = await wrapper.fillDebtOrder();
+
+        this.logger.info(`Filling debt request with id ${requestId}`);
         this.logger.info(`tx hash: ${tx.hash}`);
 
         transactions.add({
@@ -151,7 +180,7 @@ export class DharmaService {
         maxUsdAmount?: number,
     ): Promise<RelayerDebtOrder[]> {
         const debtsUrl = `${this.bloqboardUri}/Debts`;
-        const kernelAddress = this.dharmaKernelAddress;
+        const kernelAddress = this.dharmaKernel.address;
         const pagination = {};
         const sorting = {};
 
@@ -205,7 +234,7 @@ export class DharmaService {
             this.logger.error(`maxLtv is undefined in lend offer: ${JSON.stringify(relayerLendOffer)}`);
         }
 
-        const parsedOffer = await this.loadAdapter.fromRelayerDebtOrder(relayerLendOffer);
+        const parsedOffer = await this.loanAdapter.fromRelayerDebtOrder(relayerLendOffer);
 
         const principal = TokenAmount.fromRaw(parsedOffer.principalAmount, parsedOffer.principalTokenSymbol);
 

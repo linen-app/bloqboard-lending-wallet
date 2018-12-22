@@ -20,6 +20,17 @@ export class DharmaController {
         return debtOrders;
     }
 
+    @Post('fill-debt-request/:debtRequestId')
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
+    async fillDebtRequest(
+        @Param('debtRequestId') debtRequestId: string,
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Res() res,
+    ): Promise<any> {
+        const result = await this.dharmaService.fillDebtRequest(debtRequestId, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
+    }
+
     @Get('lend-offers')
     async getLendOffers(
         @Query('minUsdAmount', ParseIntPipe) minUsdAmount: number,

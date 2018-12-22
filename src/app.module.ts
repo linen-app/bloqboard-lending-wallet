@@ -47,6 +47,12 @@ const tokenRegistryContract = new ethers.Contract(
     wallet,
 );
 
+const debtKernelContract = new ethers.Contract(
+    dharmaAddresses.DebtKernel,
+    ContractArtifacts.latest.DebtKernel,
+    wallet,
+);
+
 const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
 
 @Module({
@@ -72,7 +78,7 @@ const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
         CollateralizedSimpleInterestLoanAdapter,
         { provide: 'bloqboard-uri', useValue: BloqboardAPI.networks[NETWORK] },
         { provide: 'currency-rates-uri', useValue: CurrencyRatesAPI.networks[NETWORK] },
-        { provide: 'dharma-kernel-address', useValue: dharmaAddresses.DebtKernel },
+        { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
         { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
         { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
         { provide: 'dharma-token-registry-contract', useValue: tokenRegistryContract },

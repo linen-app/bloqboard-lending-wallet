@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Contract } from 'ethers';
 import { BigNumber } from 'bignumber.js';
-import { RelayerDebtOrder } from './relayer-debt-order';
+import { RelayerDebtOrder } from './models/relayer-debt-order';
+import { DebtOrderData } from './models/DebtOrderData';
+import { ECDSASignature } from './models/ECDSASignature';
 
 type AmortizationUnit = 'hours' | 'days' | 'weeks' | 'months' | 'years';
 
@@ -11,37 +13,6 @@ enum AmortizationUnitCode {
     WEEKS,
     MONTHS,
     YEARS,
-}
-
-interface ECDSASignature {
-    r: string;
-    s: string;
-    v: number;
-}
-
-interface DebtOrderData {
-    kernelVersion?: string;
-    issuanceVersion?: string;
-    principalAmount?: BigNumber;
-    principalToken?: string;
-    debtor?: string;
-    debtorFee?: BigNumber;
-    creditor?: string;
-    creditorFee?: BigNumber;
-    relayer?: string;
-    relayerFee?: BigNumber;
-    underwriter?: string;
-    underwriterFee?: BigNumber;
-    underwriterRiskRating?: BigNumber;
-    termsContract?: string;
-    termsContractParameters?: string;
-    expirationTimestampInSec?: BigNumber;
-    salt?: BigNumber;
-
-    // Signatures
-    debtorSignature?: ECDSASignature;
-    creditorSignature?: ECDSASignature;
-    underwriterSignature?: ECDSASignature;
 }
 
 interface SimpleInterestLoanOrder extends DebtOrderData {
@@ -91,28 +62,28 @@ export class CollateralizedSimpleInterestLoanAdapter {
         @Inject('dharma-token-registry-contract') private readonly dharmaTokenRegistry: Contract,
     ) { }
 
-    async fromRelayerDebtOrder(relayerLendOffer: RelayerDebtOrder): Promise<CollateralizedSimpleInterestLoanOrder> {
+    async fromRelayerDebtOrder(order: RelayerDebtOrder): Promise<CollateralizedSimpleInterestLoanOrder> {
         const debtOrderData: DebtOrderData = {
-            kernelVersion: relayerLendOffer.kernelAddress,
-            issuanceVersion: relayerLendOffer.repaymentRouterAddress,
-            principalAmount: new BigNumber(relayerLendOffer.principalAmount || 0),
-            principalToken: relayerLendOffer.principalTokenAddress,
-            debtor: relayerLendOffer.debtorAddress,
-            debtorFee: new BigNumber(relayerLendOffer.debtorFee || 0),
-            termsContract: relayerLendOffer.termsContractAddress,
-            termsContractParameters: relayerLendOffer.termsContractParameters,
-            expirationTimestampInSec: new BigNumber(new Date(relayerLendOffer.expirationTime).getTime() / 1000),
-            salt: new BigNumber(relayerLendOffer.salt || 0),
-            debtorSignature: relayerLendOffer.debtorSignature ? JSON.parse(relayerLendOffer.debtorSignature) : null,
-            relayer: relayerLendOffer.relayerAddress,
-            relayerFee: new BigNumber(relayerLendOffer.relayerFee || 0),
-            underwriter: relayerLendOffer.underwriterAddress,
-            underwriterRiskRating: new BigNumber(relayerLendOffer.underwriterRiskRating || 0),
-            underwriterFee: new BigNumber(relayerLendOffer.underwriterFee || 0),
-            underwriterSignature: relayerLendOffer.underwriterSignature ? JSON.parse(relayerLendOffer.underwriterSignature) : null,
-            creditor: relayerLendOffer.creditorAddress,
-            creditorSignature: relayerLendOffer.creditorSignature ? JSON.parse(relayerLendOffer.creditorSignature) : null,
-            creditorFee: new BigNumber(relayerLendOffer.creditorFee || 0),
+            kernelVersion: order.kernelAddress,
+            issuanceVersion: order.repaymentRouterAddress,
+            principalAmount: new BigNumber(order.principalAmount || 0),
+            principalToken: order.principalTokenAddress,
+            debtor: order.debtorAddress,
+            debtorFee: new BigNumber(order.debtorFee || 0),
+            termsContract: order.termsContractAddress,
+            termsContractParameters: order.termsContractParameters,
+            expirationTimestampInSec: new BigNumber(new Date(order.expirationTime).getTime() / 1000),
+            salt: new BigNumber(order.salt || 0),
+            debtorSignature: this.parseSignature(order.debtorSignature),
+            relayer: order.relayerAddress,
+            relayerFee: new BigNumber(order.relayerFee || 0),
+            underwriter: order.underwriterAddress,
+            underwriterRiskRating: new BigNumber(order.underwriterRiskRating || 0),
+            underwriterFee: new BigNumber(order.underwriterFee || 0),
+            underwriterSignature: this.parseSignature(order.underwriterSignature),
+            creditor: order.creditorAddress,
+            creditorSignature: this.parseSignature(order.creditorSignature),
+            creditorFee: new BigNumber(order.creditorFee || 0),
         };
 
         const { principalTokenIndex, collateralTokenIndex, ...params } = this.unpackParameters(
@@ -212,5 +183,15 @@ export class CollateralizedSimpleInterestLoanAdapter {
             collateralAmount: new BigNumber(collateralAmountHex),
             gracePeriodInDays: new BigNumber(gracePeriodInDaysHex),
         };
+    }
+
+    private parseSignature(serializedSignature: string) {
+        const sign: ECDSASignature = serializedSignature && JSON.parse(serializedSignature);
+
+        if (sign && sign.r) {
+            return sign;
+        }
+
+        return ECDSASignature.NULL_SIGNATURE;
     }
 }

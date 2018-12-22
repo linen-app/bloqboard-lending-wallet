@@ -8,22 +8,17 @@ const { LTVCreditorProxy } = contractArtifacts.latest;
 
 // Types
 import { BigNumber } from 'bignumber.js';
-import { TokenAmount } from './token_amount';
+import { TokenAmount } from '../models/token_amount';
 import { SimpleInterestContractTerms, CollateralizedContractTerms, CollateralizedSimpleInterestTermsParameters } from './TermsContractParameters';
-import { TimeInterval } from './time_interval';
+import { TimeInterval } from '../models/time_interval';
 import { TransactionResponse, TransactionRequest } from 'ethers/providers';
-import { InterestRate } from './interest_rate';
-import { ECDSASignature, ecSign } from './ECDSASignature';
-import { LTVParams } from './LTVTypes';
+import { InterestRate } from '../models/interest_rate';
+import { ECDSASignature, ecSign } from '../models/ECDSASignature';
+import { LTVParams } from '../models/LTVTypes';
 
 const MAX_INTEREST_RATE_PRECISION = 4;
 const FIXED_POINT_SCALING_FACTOR = 10 ** MAX_INTEREST_RATE_PRECISION;
 const NULL_ADDRESS = ethers.constants.AddressZero;
-const NULL_ECDSA_SIGNATURE = {
-    r: ethers.utils.formatBytes32String(''),
-    s: ethers.utils.formatBytes32String(''),
-    v: 0,
-};
 
 const MAX_LTV_LOAN_OFFER_ERRORS = {
     ALREADY_SIGNED_BY_CREDITOR: () =>
@@ -429,8 +424,8 @@ export class MaxLTVLoanOffer {
                 relayer: this.data.relayer,
                 relayerFee: this.data.relayerFee.rawAmount.toString(),
                 underwriterFee: 0,
-                debtorSignature: this.debtorSignature || NULL_ECDSA_SIGNATURE,
-                underwriterSignature: NULL_ECDSA_SIGNATURE,
+                debtorSignature: this.debtorSignature || ECDSASignature.NULL_SIGNATURE,
+                underwriterSignature: ECDSASignature.NULL_SIGNATURE,
                 creditorSignature: this.creditorSignature,
                 // Order params
                 issuanceVersion: this.data.issuanceVersion,
