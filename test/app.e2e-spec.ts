@@ -3,15 +3,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { WinstonModule } from 'nest-winston';
 import * as request from 'supertest';
 import { ethers, Contract, utils } from 'ethers';
-import { TokenMetadata, TokenSymbol } from '../src/types';
 import { CompoundService } from '../src/compound/compound.service';
 import { KyberService } from '../src/kyber/kyber.service';
 import { CompoundController } from '../src/compound/compound.controller';
-import { TokenService } from '../src/token.service';
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
 import winston = require('winston');
 import { format } from 'winston';
+import { TokenMetadata } from '../src/tokens/TokenMetadata';
+import { TokenService } from '../src/tokens/TokenService';
+import { TokenSymbol } from '../src/tokens/TokenSymbol';
 
 describe('Compound API (e2e)', () => {
     let app: INestApplication;

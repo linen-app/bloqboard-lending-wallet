@@ -1,17 +1,17 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { TokenSymbol, Address } from 'src/types';
+import { Address } from 'src/types';
 import { Wallet } from 'ethers';
 import { CollateralizedSimpleInterestLoanAdapter } from './CollateralizedSimpleInterestLoanAdapter';
-import { TokenAmount } from './models/TokenAmount';
+import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TransactionLog } from '../TransactionLog';
 import { TokenService } from '../tokens/TokenService';
 import { Logger } from 'winston';
-import { DebtOrderWrapper } from './DebtOrderWrapper';
 import { DharmaOrdersFetcher } from './DharmaOrdersFetcher';
 import { Status } from './models/RelayerDebtOrder';
+import { DebtOrderWrapper } from './wrappers/DebtOrderWrapper';
 
 @Injectable()
-export class DharmaLoanRequestService {
+export class DharmaDebtRequestService {
 
     constructor(
         @Inject('wallet') private readonly wallet: Wallet,
@@ -38,8 +38,8 @@ export class DharmaLoanRequestService {
             this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
                 .then(x => ({
                     id: relayerOrder.id,
-                    principal: TokenAmount.fromRaw(x.principalAmount, x.principalTokenSymbol).toString(),
-                    collateral: TokenAmount.fromRaw(x.collateralAmount, x.collateralTokenSymbol).toString(),
+                    principal: x.principal,
+                    collateral: x.collateral,
                     interestRate: x.interestRate.toNumber() / 100,
                     termLength: x.termLength.toNumber(),
                     amortizationUnit: x.amortizationUnit,
@@ -54,10 +54,10 @@ export class DharmaLoanRequestService {
         const rawOrder = await this.ordersFetcher.fetchOrder(requestId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
 
-        await this.tokenService.addUnlockTransactionIfNeeded(order.principalTokenSymbol as TokenSymbol, this.tokenTransferProxyAddress, transactions);
+        await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
 
         order.creditor = this.wallet.address;
-        const tx = await this.debtOrderWrapper.wrap(order).fill({ nonce: transactions.getNextNonce() });
+        const tx = await this.debtOrderWrapper.wrapDebtOrder(order).fill({ nonce: transactions.getNextNonce() });
 
         this.logger.info(`Filling debt request with id ${requestId}`);
         this.logger.info(`tx hash: ${tx.hash}`);

@@ -1,29 +1,29 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { TokenSymbol, Address, Amount } from 'src/types';
 import Axios from 'axios';
 import { Agent } from 'https';
 import { Wallet } from 'ethers';
 import { CollateralizedSimpleInterestLoanAdapter } from './CollateralizedSimpleInterestLoanAdapter';
-import { MaxLTVLoanOffer, MaxLTVData, CreditorValues, Price } from './ltv-creditor-proxy-wrapper/MaxLTVLoanOffer';
-import { TimeInterval } from './models/TimeInterval';
-import { TokenAmount } from './models/TokenAmount';
-import { BigNumber } from 'bignumber.js';
-import { InterestRate } from './models/InterestRate';
+import { TokenSymbol } from '../tokens/TokenSymbol';
+import { TokenMetadata } from '../tokens/TokenMetadata';
+import { TokenAmount } from '../tokens/TokenAmount';
 import { TransactionLog } from '../TransactionLog';
 import { TokenService } from '../tokens/TokenService';
 import { Logger } from 'winston';
 import { RelayerDebtOrder, Status } from './models/RelayerDebtOrder';
-import { DebtOrderWrapper } from './DebtOrderWrapper';
 import { DharmaOrdersFetcher } from './DharmaOrdersFetcher';
+import { Price } from './models/Price';
+import { Address } from 'src/types';
+import { DebtOrderWrapper } from './wrappers/DebtOrderWrapper';
+import { BigNumber } from 'ethers/utils';
 
 @Injectable()
 export class DharmaLendOffersService {
     constructor(
         @Inject('wallet') private readonly wallet: Wallet,
         @Inject('currency-rates-uri') private readonly currencyRatesUrl: string,
-        @Inject('creditor-proxy-address') private readonly creditorProxyAddress: Address,
         @Inject('token-transfer-proxy-address') private readonly tokenTransferProxyAddress: Address,
         @Inject('winston') private readonly logger: Logger,
+        private readonly debtOrderFactory: DebtOrderWrapper,
         private readonly ordersFetcher: DharmaOrdersFetcher,
         private readonly tokenService: TokenService,
         private readonly loanAdapter: CollateralizedSimpleInterestLoanAdapter,
@@ -45,12 +45,12 @@ export class DharmaLendOffersService {
             this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
                 .then(x => ({
                     id: relayerOrder.id,
-                    principal: TokenAmount.fromRaw(x.principalAmount, x.principalTokenSymbol).toString(),
+                    principal: x.principal,
                     maxLtv: relayerOrder.maxLtv / 100,
                     interestRate: x.interestRate.toNumber() / 100,
                     termLength: x.termLength.toNumber(),
                     amortizationUnit: x.amortizationUnit,
-                    collateralTokenSymbol: x.collateralTokenSymbol,
+                    collateralTokenSymbol: x.collateral.token.symbol,
                 })),
         ));
 
@@ -60,18 +60,18 @@ export class DharmaLendOffersService {
     async fillLendOffer(offerId: string, needAwaitMining: boolean): Promise<TransactionLog> {
         const transactions = new TransactionLog();
         const rawOffer = await this.ordersFetcher.fetchOrder(offerId);
-        const { offer, principal, collateral } = await this.convertLendOfferToProxyInstance(rawOffer);
+        const offer = await this.convertLendOfferToProxyInstance(rawOffer);
 
-        await this.tokenService.addUnlockTransactionIfNeeded(collateral.tokenSymbol as TokenSymbol, this.tokenTransferProxyAddress, transactions);
+        await this.tokenService.addUnlockTransactionIfNeeded(offer.collateralToken.symbol, this.tokenTransferProxyAddress, transactions);
 
-        const principalPrice = await this.getSignedRate(principal.tokenSymbol, 'USD');
-        const collateralPrice = await this.getSignedRate(collateral.tokenSymbol, 'USD');
+        const principalPrice = await this.getSignedRate(offer.principal.token.symbol, 'USD');
+        const collateralPrice = await this.getSignedRate(offer.collateralToken.symbol, 'USD');
 
         const collateralAmount = this.calculateCollateral(
-            principal.rawAmount,
+            offer.principal,
             principalPrice.value,
             collateralPrice.value,
-            collateral.tokenSymbol,
+            offer.collateralToken,
             rawOffer.maxLtv,
         );
 
@@ -79,7 +79,7 @@ export class DharmaLendOffersService {
 
         offer.setPrincipalPrice(principalPrice);
         offer.setCollateralPrice(collateralPrice);
-        offer.setCollateralAmount(new BigNumber(collateralAmount.decimalAmount.toString()));
+        offer.setCollateralAmount(new BigNumber(collateralAmount.humanReadableAmount.toString()));
 
         const debtor = this.wallet.address.toLowerCase();
         await offer.signAsDebtor(debtor, false);
@@ -100,14 +100,14 @@ export class DharmaLendOffersService {
         return transactions;
     }
 
-    async repayLendOffer(lendOfferId: string, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLog> {
+    async repayLendOffer(lendOfferId: string, rawAmount: BigNumber, needAwaitMining: boolean): Promise<TransactionLog> {
         const transactions = new TransactionLog();
         const rawOrder = await this.ordersFetcher.fetchOrder(lendOfferId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
 
-        await this.tokenService.addUnlockTransactionIfNeeded(order.principalTokenSymbol as TokenSymbol, this.tokenTransferProxyAddress, transactions);
+        await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
 
-        const tx = await this.debtOrderWrapperFactory.wrap(order).repay(
+        const tx = await this.debtOrderWrapperFactory.wrapDebtOrder(order).repay(
             rawAmount,
             { nonce: transactions.getNextNonce() },
         );
@@ -136,16 +136,17 @@ export class DharmaLendOffersService {
     }
 
     private calculateCollateral(
-        principalAmount: BigNumber,
+        principal: TokenAmount,
         principalAmountUsdRate: number,
         collateralUsdRate: number,
-        collateralTokenSymbol: string,
+        collateralToken: TokenMetadata,
         ltv: number,
     ): TokenAmount {
-        const usdAmount = principalAmount.mul(principalAmountUsdRate);
-        const usdCollateral = usdAmount.div(new BigNumber(ltv).div(100));
-        const collateral = usdCollateral.div(collateralUsdRate).mul(1.01);
-        return TokenAmount.fromRaw(collateral, collateralTokenSymbol);
+        const usdAmount = principal.humanReadableAmount * principalAmountUsdRate;
+        const usdCollateral = usdAmount / (ltv / 100);
+        const collateral = (usdCollateral / collateralUsdRate) * 1.01;
+
+        return TokenAmount.fromHumanReadable(collateral, collateralToken);
     }
 
     private async getSignedRate(source: string, target: string): Promise<Price> {
@@ -177,47 +178,8 @@ export class DharmaLendOffersService {
 
         const parsedOffer = await this.loanAdapter.fromRelayerDebtOrder(relayerLendOffer);
 
-        const principal = TokenAmount.fromRaw(parsedOffer.principalAmount, parsedOffer.principalTokenSymbol);
+        const result = this.debtOrderFactory.WrappedLendOffer(parsedOffer);
 
-        const lendOfferParams: MaxLTVData = {
-            collateralTokenAddress: parsedOffer.collateralTokenAddress,
-            collateralTokenIndex: parsedOffer.collateralTokenIndex,
-            collateralTokenSymbol: parsedOffer.collateralTokenSymbol,
-            creditorFee: parsedOffer.creditorFee,
-            debtorFee: parsedOffer.debtorFee,
-            expiresIn: new TimeInterval(0, 'hours'), // not used, expirationTimestampInSec is set directly
-            interestRate: InterestRate.fromRaw(parsedOffer.interestRate),
-            issuanceVersion: parsedOffer.issuanceVersion,
-            kernelVersion: parsedOffer.kernelVersion,
-            maxLTV: new BigNumber(relayerLendOffer.maxLtv),
-            priceProvider: relayerLendOffer.signerAddress,
-            principal,
-            principalTokenAddress: parsedOffer.principalTokenAddress,
-            principalTokenIndex: parsedOffer.principalTokenIndex,
-            relayer: parsedOffer.relayer,
-            relayerFee: TokenAmount.fromRaw(parsedOffer.relayerFee, parsedOffer.principalTokenSymbol),
-            salt: parsedOffer.salt,
-            termLength: new TimeInterval(parsedOffer.termLength.toNumber(), parsedOffer.amortizationUnit),
-            termsContract: parsedOffer.termsContract,
-        };
-
-        const creditorValued: CreditorValues = {
-            creditor: parsedOffer.creditor,
-            creditorSignature: parsedOffer.creditorSignature,
-            expirationTimestampInSec: parsedOffer.expirationTimestampInSec,
-        };
-
-        const result = new MaxLTVLoanOffer(
-            this.creditorProxyAddress,
-            this.wallet,
-            lendOfferParams,
-            creditorValued,
-        );
-
-        return {
-            offer: result,
-            principal,
-            collateral: TokenAmount.fromRaw(new BigNumber(0), parsedOffer.collateralTokenSymbol),
-        };
+        return result;
     }
 }

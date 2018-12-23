@@ -1,11 +1,12 @@
 import { Test } from '@nestjs/testing';
-import { TokenService } from '../token.service';
 import { ethers, utils } from 'ethers';
-import { TokenMetadata, TokenSymbol } from '../types';
 import { KyberService } from './kyber.service';
 import * as Kyber from '../../resources/kyber-network-proxy.json';
 import * as Account from '../../resources/account.json';
 import * as Tokens from '../../resources/tokens.json';
+import { TokenMetadata } from '../tokens/TokenMetadata';
+import { TokenService } from '../tokens/TokenService';
+import { TokenSymbol } from '../tokens/TokenSymbol';
 
 describe('KyberService', () => {
     let kyberService: KyberService;
@@ -48,7 +49,7 @@ describe('KyberService', () => {
 
     describe('KyberService', () => {
         it('buyToken', async () => {
-            const res = await kyberService.buyToken(utils.parseEther('0.2'), TokenSymbol.DAI, TokenSymbol.WETH, true);
+            const res = await kyberService.buyToken(0.2, TokenSymbol.DAI, TokenSymbol.WETH, true);
         });
     });
 });

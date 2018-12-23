@@ -1,6 +1,6 @@
 import { Get, Controller, Post, Query, Res, HttpStatus, ParseIntPipe, Param } from '@nestjs/common';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
-import { DharmaLoanRequestService } from './DharmaLoanRequestService';
+import { DharmaDebtRequestService } from './DharmaDebtRequestService';
 import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { DharmaLendOffersService } from './DharmaLendOffersService';
 
@@ -8,7 +8,7 @@ import { DharmaLendOffersService } from './DharmaLendOffersService';
 @ApiUseTags('Dharma @ Bloqboard')
 export class DharmaController {
     constructor(
-        private readonly dharmaLoanRequestsService: DharmaLoanRequestService,
+        private readonly dharmaLoanRequestsService: DharmaDebtRequestService,
         private readonly dharmaLendOffersService: DharmaLendOffersService,
     ) { }
 

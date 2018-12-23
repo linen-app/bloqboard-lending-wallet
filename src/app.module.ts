@@ -8,10 +8,9 @@ import * as ContractArtifacts from 'dharma-contract-artifacts';
 import { CompoundController } from './compound/compound.controller';
 import { CompoundService } from './compound/compound.service';
 import { TokenService } from './tokens/TokenService';
-import { TokenMetadata } from './types';
 import { KyberService } from './kyber/kyber.service';
 import { KyberController } from './kyber/kyber.controller';
-import { DharmaLoanRequestService } from './dharma/DharmaLoanRequestService';
+import { DharmaDebtRequestService } from './dharma/DharmaDebtRequestService';
 import { DharmaController } from './dharma/DharmaController';
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
@@ -23,8 +22,9 @@ import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 
 import { CollateralizedSimpleInterestLoanAdapter } from './dharma/CollateralizedSimpleInterestLoanAdapter';
 import { DharmaOrdersFetcher } from './dharma/DharmaOrdersFetcher';
-import { DebtOrderWrapper } from './dharma/DebtOrderWrapper';
 import { DharmaLendOffersService } from './dharma/DharmaLendOffersService';
+import { TokenMetadata } from './tokens/TokenMetadata';
+import { DebtOrderWrapper } from './dharma/wrappers/DebtOrderWrapper';
 
 const NETWORK = process.env.NETWORK || 'kovan';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -89,7 +89,7 @@ const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
         CompoundService,
         KyberService,
         TokenService,
-        DharmaLoanRequestService,
+        DharmaDebtRequestService,
         DharmaLendOffersService,
         CollateralizedSimpleInterestLoanAdapter,
         DharmaOrdersFetcher,

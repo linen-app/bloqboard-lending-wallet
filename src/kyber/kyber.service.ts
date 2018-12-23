@@ -2,8 +2,10 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Contract, Wallet, ethers, utils } from 'ethers';
 import { TokenService } from '../tokens/TokenService';
-import { TokenSymbol, Amount, TokenMetadata } from '../types';
 import { TransactionLog } from '../TransactionLog';
+import { TokenSymbol } from '../tokens/TokenSymbol';
+import { TokenMetadata } from '../tokens/TokenMetadata';
+import { TokenAmount } from '../tokens/TokenAmount';
 
 const PRECISION = ethers.constants.WeiPerEther;
 
@@ -17,23 +19,26 @@ export class KyberService {
     ) { }
 
     async sellToken(
-        rawAmount: Amount,
+        humanReadableAmount: number,
         tokenSymbolToSell: TokenSymbol,
         tokenSymbolToBuy: TokenSymbol,
         needAwaitMining: boolean,
         nonce?: number,
     ): Promise<TransactionLog> {
         const tokenToBuy = this.tokenService.getTokenBySymbol(tokenSymbolToBuy);
-        const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
+        const amountToSell = TokenAmount.fromHumanReadable(
+            humanReadableAmount,
+            this.tokenService.getTokenBySymbol(tokenSymbolToSell),
+        );
         const transactions = new TransactionLog();
 
         await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions);
 
-        const { slippageRate } = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, rawAmount);
+        const { slippageRate } = await this.kyberContract.getExpectedRate(amountToSell.token.address, tokenToBuy.address, amountToSell.rawAmount);
 
         const tradeTx = await this.kyberContract.swapTokenToToken(
-            tokenToSell.address,
-            rawAmount,
+            amountToSell.token.address,
+            amountToSell.rawAmount,
             tokenToBuy.address,
             slippageRate,
             { nonce: transactions.getNextNonce() },
@@ -44,7 +49,7 @@ export class KyberService {
             transactionObject: tradeTx,
         });
 
-        this.logger.info(`Selling ${rawAmount} ${tokenSymbolToSell} for ${tokenSymbolToBuy}`);
+        this.logger.info(`Selling ${amountToSell} for ${tokenSymbolToBuy}`);
 
         if (needAwaitMining) {
             await transactions.wait();
@@ -53,28 +58,47 @@ export class KyberService {
         return transactions;
     }
 
-    async buyToken(
-        rawAmount: Amount,
+    buyToken(
+        humanReadableAmount: number,
         tokenSymbolToBuy: TokenSymbol,
         tokenSymbolToSell: TokenSymbol,
         needAwaitMining: boolean,
         nonce?: number,
     ): Promise<TransactionLog> {
-        const tokenToBuy = this.tokenService.getTokenBySymbol(tokenSymbolToBuy);
+        const amountToBuy = TokenAmount.fromHumanReadable(
+            humanReadableAmount,
+            this.tokenService.getTokenBySymbol(tokenSymbolToBuy),
+        );
+
+        return this.buyTokenRawAmount(
+            amountToBuy,
+            tokenSymbolToSell,
+            needAwaitMining,
+            nonce,
+        );
+    }
+
+    async buyTokenRawAmount(
+        amountToBuy: TokenAmount,
+        tokenSymbolToSell: TokenSymbol,
+        needAwaitMining: boolean,
+        nonce?: number,
+    ): Promise<TransactionLog> {
         const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
+
         const transactions = new TransactionLog();
 
-        await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions);
+        await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions, nonce);
 
-        const approximateAmountToSell = await this.calcApproximateAmountToSell(rawAmount, tokenToBuy, tokenToSell);
-        const { amountToSell, rate } = await this.calcAmountToSell(rawAmount, approximateAmountToSell, tokenToBuy, tokenToSell);
+        const approximateAmountToSell = await this.calcApproximateAmountToSell(amountToBuy, tokenToSell);
+        const { amountToSell, rate } = await this.calcAmountToSell(amountToBuy, approximateAmountToSell);
 
         const tradeTx = await this.kyberContract.trade(
             tokenToSell.address,
             amountToSell,
-            tokenToBuy.address,
+            amountToBuy.token.address,
             this.wallet.address,
-            rawAmount,
+            amountToBuy.rawAmount,
             rate,
             ethers.constants.AddressZero,
             { nonce: transactions.getNextNonce() },
@@ -85,7 +109,7 @@ export class KyberService {
             transactionObject: tradeTx,
         });
 
-        this.logger.info(`Buying ${rawAmount} ${tokenSymbolToBuy} for ${tokenSymbolToSell}`);
+        this.logger.info(`Buying ${amountToBuy} for ${tokenSymbolToSell}`);
 
         if (needAwaitMining) {
             await transactions.wait();
@@ -95,29 +119,33 @@ export class KyberService {
     }
 
     private async calcApproximateAmountToSell(
-        rawAmountToBuy: Amount,
-        tokenToBuy: TokenMetadata,
+        amountToBuy: TokenAmount,
         tokenToSell: TokenMetadata,
-    ) {
-        const response = await this.kyberContract.getExpectedRate(tokenToBuy.address, tokenToSell.address, rawAmountToBuy);
-        const amountToSell = rawAmountToBuy.mul(response.slippageRate).div(PRECISION);
+    ): Promise<TokenAmount> {
+        const response = await this.kyberContract.getExpectedRate(amountToBuy.token.address, tokenToSell.address, amountToBuy.rawAmount);
+        const amountToSell = amountToBuy.rawAmount.mul(response.slippageRate).div(PRECISION);
         this.logger.info(`calcApproximateAmountToSell rate: ${utils.formatEther(response.slippageRate)}`);
         this.logger.info(`calcApproximateAmountToSell: ${utils.formatEther(amountToSell)}`);
 
-        return amountToSell;
+        return new TokenAmount(amountToSell, tokenToSell);
     }
 
     private async calcAmountToSell(
-        amountToBuy: Amount,
-        approximateAmountToSell: Amount,
-        tokenToBuy: TokenMetadata,
-        tokenToSell: TokenMetadata,
+        amountToBuy: TokenAmount,
+        approximateAmountToSell: TokenAmount,
     ) {
-        const response = await this.kyberContract.getExpectedRate(tokenToSell.address, tokenToBuy.address, approximateAmountToSell);
-        const amountToSell = amountToBuy.mul(PRECISION).div(response.slippageRate);
+        const response = await this.kyberContract.getExpectedRate(
+            approximateAmountToSell.token.address,
+            amountToBuy.token.address,
+            approximateAmountToSell.rawAmount,
+        );
+        const amountToSell = amountToBuy.rawAmount.mul(PRECISION).div(response.slippageRate);
         this.logger.info(`calcAmountToSell rate: ${utils.formatEther(response.slippageRate)}`);
         this.logger.info(`calcAmountToSell: ${utils.formatEther(amountToSell)}`);
 
-        return { amountToSell, rate: response.slippageRate };
+        return {
+            amountToSell: new TokenAmount(amountToSell, approximateAmountToSell.token),
+            rate: response.slippageRate,
+        };
     }
 }

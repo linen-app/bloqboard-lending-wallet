@@ -2,9 +2,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Contract, Wallet, ContractTransaction, ethers } from 'ethers';
 import { TokenService } from '../tokens/TokenService';
-import { TokenSymbol, Amount } from '../types';
 import { TransactionLog } from '../TransactionLog';
 import { KyberService } from '../kyber/kyber.service';
+import { BigNumber } from 'ethers/utils';
+import { TokenSymbol } from '../tokens/TokenSymbol';
+import { TokenAmount } from '../tokens/TokenAmount';
 
 @Injectable()
 export class CompoundService {
@@ -17,36 +19,37 @@ export class CompoundService {
         @Inject('money-market-contract') private readonly moneyMarketContract: Contract,
     ) { }
 
-    async getSupplyBalance(symbol: TokenSymbol): Promise<Amount> {
+    async getSupplyBalance(symbol: TokenSymbol): Promise<TokenAmount> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const res = await this.moneyMarketContract.getSupplyBalance(this.wallet.address, token.address);
+        const res: BigNumber = await this.moneyMarketContract.getSupplyBalance(this.wallet.address, token.address);
+        return new TokenAmount(res, token);
+    }
+
+    async getBorrowBalance(symbol: TokenSymbol): Promise<TokenAmount> {
+        const token = this.tokenService.getTokenBySymbol(symbol);
+        const res: BigNumber = await this.moneyMarketContract.getBorrowBalance(this.wallet.address, token.address);
+        return new TokenAmount(res, token);
+    }
+
+    async getAccountLiquidity(): Promise<BigNumber> {
+        const res: BigNumber = await this.moneyMarketContract.getAccountLiquidity(this.wallet.address);
         return res;
     }
 
-    async getBorrowBalance(symbol: TokenSymbol): Promise<Amount> {
+    async supply(symbol: TokenSymbol, humanReadableTokenAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const res = await this.moneyMarketContract.getBorrowBalance(this.wallet.address, token.address);
-        return res;
-    }
-
-    async getAccountLiquidity(): Promise<Amount> {
-        const res = await this.moneyMarketContract.getAccountLiquidity(this.wallet.address);
-        return res;
-    }
-
-    async supply(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLog> {
-        const token = this.tokenService.getTokenBySymbol(symbol);
+        const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
         const transactions = new TransactionLog();
 
         await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
             token.address,
-            rawAmount,
+            tokenAmount.rawAmount,
             { nonce: transactions.getNextNonce(), gasLimit: 300000 },
         );
 
-        this.logger.info(`Supplying ${rawAmount.toString()} ${symbol}`);
+        this.logger.info(`Supplying ${tokenAmount}`);
 
         transactions.add({
             name: 'supply',
@@ -59,11 +62,12 @@ export class CompoundService {
         return transactions;
     }
 
-    async withdraw(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLog> {
+    async withdraw(symbol: TokenSymbol, humanReadableTokenAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(token.address, rawAmount);
+        const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
+        const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(token.address, tokenAmount.rawAmount);
 
-        this.logger.info(`Withdrawing ${rawAmount.toString()} ${symbol}`);
+        this.logger.info(`Withdrawing ${tokenAmount}`);
 
         if (needAwaitMining) {
             await txObject.wait();
@@ -77,11 +81,12 @@ export class CompoundService {
         );
     }
 
-    async borrow(symbol: TokenSymbol, rawAmount: Amount, needAwaitMining: boolean): Promise<TransactionLog> {
+    async borrow(symbol: TokenSymbol, humanReadableTokenAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
-        const txObject: ContractTransaction = await this.moneyMarketContract.borrow(token.address, rawAmount);
+        const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
+        const txObject: ContractTransaction = await this.moneyMarketContract.borrow(token.address, tokenAmount.rawAmount);
 
-        this.logger.info(`Borrowing ${rawAmount.toString()} ${symbol}`);
+        this.logger.info(`Borrowing ${tokenAmount}`);
 
         if (needAwaitMining) {
             await txObject.wait();
@@ -97,24 +102,27 @@ export class CompoundService {
 
     async repayBorrow(
         symbol: TokenSymbol,
-        rawAmount: Amount,
+        humanReadableTokenAmount: number,
         utilizeOtherTokens: boolean,
         needAwaitMining: boolean,
     ): Promise<TransactionLog> {
         const transactions = new TransactionLog();
         const token = this.tokenService.getTokenBySymbol(symbol);
+        const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
 
         await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
-        const neededAmount = rawAmount.eq(ethers.constants.MaxUint256) ? (await this.getBorrowBalance(symbol)) : rawAmount;
+        const neededTokenAmount = tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ?
+            (await this.getBorrowBalance(symbol)).rawAmount :
+            tokenAmount.rawAmount;
+
         const balance = await this.tokenService.getTokenBalance(symbol);
         this.logger.info(`utilizeOtherTokens: ${utilizeOtherTokens}`);
-        if (neededAmount.gt(balance) && utilizeOtherTokens) {
-            const additionalAmount = neededAmount.sub(balance);
-            this.logger.info(`buying additional amount: ${additionalAmount.toString()}`);
-            const kyberTxs = await this.kyberService.buyToken(
-                additionalAmount,
-                symbol,
+        if (neededTokenAmount.gt(balance.rawAmount) && utilizeOtherTokens) {
+            const additionalTokenAmount = neededTokenAmount.sub(balance.rawAmount);
+            this.logger.info(`buying additional TokenAmount: ${additionalTokenAmount.toString()}`);
+            const kyberTxs = await this.kyberService.buyTokenRawAmount(
+                new TokenAmount(additionalTokenAmount, tokenAmount.token),
                 TokenSymbol.WETH,
                 false,
                 transactions.getNextNonce(),
@@ -124,11 +132,11 @@ export class CompoundService {
 
         const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
             token.address,
-            rawAmount,
+            tokenAmount.rawAmount,
             { nonce: transactions.getNextNonce(), gasLimit: 300000 },
         );
 
-        this.logger.info(`Repaying ${rawAmount.eq(ethers.constants.MaxUint256) ? 'ALL' : rawAmount.toString()} ${symbol}`);
+        this.logger.info(`Repaying ${tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ? 'ALL' + symbol : tokenAmount}`);
 
         transactions.add({
             name: 'repayBorrow',

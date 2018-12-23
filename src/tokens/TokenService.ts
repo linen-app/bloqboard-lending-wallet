@@ -1,10 +1,13 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as ERC20 from '../../resources/erc20.json';
 import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
-import { TokenSymbol, TokenMetadata, Amount, Address } from '../types';
+import { Address } from '../types';
 import { BigNumber } from 'ethers/utils';
 import { Logger } from 'winston';
-import { TransactionLog } from '../TransactionLog.js';
+import { TransactionLog } from '../TransactionLog';
+import { TokenSymbol } from './TokenSymbol';
+import { TokenMetadata } from './TokenMetadata';
+import { TokenAmount } from './TokenAmount';
 
 @Injectable()
 export class TokenService {
@@ -15,34 +18,32 @@ export class TokenService {
         @Inject('winston') private readonly logger: Logger,
     ) { }
 
+    getTokenByAddress(address: Address): TokenMetadata {
+        const token = this.tokens.find(x => x.address === address);
+
+        if (!token) throw new Error(`Token with address ${address} not found`);
+
+        return token;
+    }
+
     getTokenBySymbol(symbol: TokenSymbol): TokenMetadata {
-        return this.tokens.find(x => x.symbol === symbol);
+        const token = this.tokens.find(x => x.symbol === symbol);
+
+        if (!token) throw new Error(`Token with symbol ${symbol} not found`);
+
+        return token;
     }
 
     getTokenSymbols(): TokenSymbol[] {
         return this.tokens.map(x => (x.symbol as TokenSymbol));
     }
 
-    fromHumanReadable(amount: string, symbol: TokenSymbol): Amount {
-        if (amount === '-1') {
-            return new BigNumber(ethers.constants.MaxUint256);
-        }
-
-        const token = this.getTokenBySymbol(symbol);
-        return utils.parseUnits(amount, token.decimals);
-    }
-
-    toHumanReadable(rawAmount: Amount, symbol: TokenSymbol): string {
-        const token = this.getTokenBySymbol(symbol);
-        return utils.formatUnits(rawAmount, token.decimals);
-    }
-
-    async getTokenBalance(symbol: TokenSymbol): Promise<Amount> {
+    async getTokenBalance(symbol: TokenSymbol): Promise<TokenAmount> {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const balance = await contract.balanceOf(this.wallet.address);
-        return balance;
+        const balance: BigNumber = await contract.balanceOf(this.wallet.address);
+        return new TokenAmount(balance, token);
     }
 
     async isTokenLockedForSpender(symbol: TokenSymbol, spender: Address): Promise<boolean> {
@@ -75,9 +76,9 @@ export class TokenService {
         return tx;
     }
 
-    async addUnlockTransactionIfNeeded(symbol: TokenSymbol, spender: Address, transactions: TransactionLog) {
+    async addUnlockTransactionIfNeeded(symbol: TokenSymbol, spender: Address, transactions: TransactionLog, nonce?: number) {
         if (await this.isTokenLockedForSpender(symbol, spender)) {
-            const unlockTx = await this.unlockToken(symbol, spender);
+            const unlockTx = await this.unlockToken(symbol, spender, nonce);
             transactions.add({ name: 'unlock', transactionObject: unlockTx });
         }
     }

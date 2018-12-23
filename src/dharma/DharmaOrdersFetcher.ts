@@ -2,10 +2,11 @@ import { Agent } from 'https';
 import { Inject, Injectable } from '@nestjs/common';
 import { RelayerDebtOrder, Status } from './models/RelayerDebtOrder';
 import Axios from 'axios';
-import { TokenSymbol, Address } from 'src/types';
-import { TokenService } from 'src/tokens/TokenService';
+import { Address } from 'src/types';
+import { TokenService } from '../tokens/TokenService';
 import { stringify } from 'qs';
 import { Logger } from 'winston';
+import { TokenSymbol } from "../tokens/TokenSymbol";
 
 @Injectable()
 export class DharmaOrdersFetcher {
