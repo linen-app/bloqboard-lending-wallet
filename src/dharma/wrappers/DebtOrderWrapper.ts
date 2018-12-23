@@ -8,14 +8,10 @@ import { MessageSigner } from '../MessageSigner';
 @Injectable()
 export class DebtOrderWrapper {
     constructor(
-        @Inject('dharma-kernel-contract')
-        private readonly dharmaKernel: Contract,
-        @Inject('repayment-router-contract')
-        private readonly repaymentRouter: Contract,
-        @Inject('collateralizer-contract')
-        private readonly collateralizer: Contract,
-        @Inject('ltv-creditor-proxy-contract')
-        private readonly ltvCreditorProxyContract: Contract,
+        @Inject('dharma-kernel-contract') private readonly dharmaKernel: Contract,
+        @Inject('repayment-router-contract') private readonly repaymentRouter: Contract,
+        @Inject('collateralizer-contract') private readonly collateralizer: Contract,
+        @Inject('ltv-creditor-proxy-contract') private readonly ltvCreditorProxyContract: Contract,
         private readonly signer: MessageSigner,
     ) { }
 

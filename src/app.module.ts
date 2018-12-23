@@ -5,31 +5,35 @@ import { format } from 'winston';
 import { WinstonModule } from 'nest-winston';
 import * as DharmaAddressBook from 'dharma-address-book';
 import * as ContractArtifacts from 'dharma-contract-artifacts';
-import { CompoundController } from './compound/compound.controller';
-import { CompoundService } from './compound/compound.service';
-import { TokenService } from './tokens/TokenService';
-import { KyberService } from './kyber/kyber.service';
-import { KyberController } from './kyber/kyber.controller';
-import { DharmaDebtRequestService } from './dharma/DharmaDebtRequestService';
-import { DharmaController } from './dharma/DharmaController';
+
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
+import * as LtvCreditorProxy from '../resources/dharma/creditor-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
 import * as CreditorProxy from '../resources/dharma/creditor-proxy.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 
+import { CompoundController } from './compound/compound.controller';
+import { DharmaController } from './dharma/DharmaController';
+import { CompoundService } from './compound/compound.service';
+import { TokenService } from './tokens/TokenService';
+import { KyberService } from './kyber/kyber.service';
+import { KyberController } from './kyber/kyber.controller';
+import { DharmaDebtRequestService } from './dharma/DharmaDebtRequestService';
 import { CollateralizedSimpleInterestLoanAdapter } from './dharma/CollateralizedSimpleInterestLoanAdapter';
 import { DharmaOrdersFetcher } from './dharma/DharmaOrdersFetcher';
 import { DharmaLendOffersService } from './dharma/DharmaLendOffersService';
 import { TokenMetadata } from './tokens/TokenMetadata';
 import { DebtOrderWrapper } from './dharma/wrappers/DebtOrderWrapper';
+import { MessageSigner } from './dharma/MessageSigner';
 
 const NETWORK = process.env.NETWORK || 'kovan';
 const provider = ethers.getDefaultProvider(NETWORK);
 const privateKey = Account.privateKey;
 const wallet = new ethers.Wallet(privateKey, provider);
+const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
 
 const moneyMarketContract = new ethers.Contract(
     Compound.networks[NETWORK].address,
@@ -42,6 +46,12 @@ const kyberContract = new ethers.Contract(
     wallet,
 );
 
+const ltvCreditorProcyContract = new ethers.Contract(
+    LtvCreditorProxy.networks[NETWORK].address,
+    LtvCreditorProxy.abi,
+    wallet,
+);
+
 const dharmaAddresses = DharmaAddressBook.latest[NETWORK === 'mainnet' ? 'live' : NETWORK];
 
 const tokenRegistryContract = new ethers.Contract(
@@ -49,7 +59,6 @@ const tokenRegistryContract = new ethers.Contract(
     ContractArtifacts.latest.TokenRegistry,
     wallet,
 );
-
 const debtKernelContract = new ethers.Contract(
     dharmaAddresses.DebtKernel,
     ContractArtifacts.latest.DebtKernel,
@@ -67,8 +76,6 @@ const collateralizedContract = new ethers.Contract(
     ContractArtifacts.latest.Collateralizer,
     wallet,
 );
-
-const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
 
 @Module({
     imports: [
@@ -94,24 +101,29 @@ const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
         CollateralizedSimpleInterestLoanAdapter,
         DharmaOrdersFetcher,
         DebtOrderWrapper,
+        MessageSigner,
         { provide: 'bloqboard-uri', useValue: BloqboardAPI.networks[NETWORK] },
         { provide: 'currency-rates-uri', useValue: CurrencyRatesAPI.networks[NETWORK] },
-        { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
-        { provide: 'dharma-kernel-address', useValue: debtKernelContract.address },
-        { provide: 'repayment-router-contract', useValue: repaymentRouterContract },
-        { provide: 'collateralizer-contract', useValue: collateralizedContract },
-        { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
-        { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
-        { provide: 'dharma-token-registry-contract', useValue: tokenRegistryContract },
         { provide: 'wallet', useValue: wallet },
         { provide: 'tokens', useValue: tokens },
+        { provide: 'signer', useValue: wallet },
+
+        { provide: 'dharma-kernel-address', useValue: debtKernelContract.address },
+        { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
+        { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
+
+        { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
+        { provide: 'repayment-router-contract', useValue: repaymentRouterContract },
+        { provide: 'collateralizer-contract', useValue: collateralizedContract },
+        { provide: 'dharma-token-registry-contract', useValue: tokenRegistryContract },
+        { provide: 'ltv-creditor-proxy-contract', useValue: ltvCreditorProcyContract },
         { provide: 'money-market-contract', useValue: moneyMarketContract },
         { provide: 'kyber-contract', useValue: kyberContract },
     ],
 })
 export class AppModule {
     constructor(
-        @Inject('winston') private readonly logger: winston.Logger,
+        @Inject('winston') logger: winston.Logger,
     ) {
         logger.info(`Application started with ${NETWORK} network`);
     }

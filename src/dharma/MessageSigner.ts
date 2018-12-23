@@ -5,9 +5,8 @@ import * as Web3Utils from 'web3-utils';
 
 @Injectable()
 export class MessageSigner {
-    constructor(
-        @Inject('signer')
-        private readonly signer: Signer) { }
+    constructor(@Inject('signer') private readonly signer: Signer) { }
+
     async ecSign(message: string, addPrefix: boolean): Promise<ECDSASignature> {
         if (addPrefix) {
             const prefix = '\x19Ethereum Signed Message:\n32';
