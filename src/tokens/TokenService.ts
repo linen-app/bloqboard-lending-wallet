@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as ERC20 from '../../resources/erc20.json';
 import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
-import { Address } from '../types';
+import { Address, equals } from '../types';
 import { BigNumber } from 'ethers/utils';
 import { Logger } from 'winston';
 import { TransactionLog } from '../TransactionLog';
@@ -19,7 +19,7 @@ export class TokenService {
     ) { }
 
     getTokenByAddress(address: Address): TokenMetadata {
-        const token = this.tokens.find(x => x.address === address);
+        const token = this.tokens.find(x => equals(x.address, address));
 
         if (!token) throw new Error(`Token with address ${address} not found`);
 

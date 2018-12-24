@@ -5,7 +5,6 @@ import * as request from 'supertest';
 import { ethers, Contract, utils } from 'ethers';
 import winston = require('winston');
 import { format } from 'winston';
-import * as DharmaAddressBook from 'dharma-address-book';
 import * as ContractArtifacts from 'dharma-contract-artifacts';
 
 import { CompoundController } from '../src/compound/compound.controller';
@@ -23,10 +22,10 @@ import { TokenSymbol } from '../src/tokens/TokenSymbol';
 
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
-import * as LtvCreditorProxy from '../resources/dharma/creditor-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
-import * as CreditorProxy from '../resources/dharma/creditor-proxy.json';
+import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json';
+import * as Addresses from '../resources/dharma/addresses.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 
@@ -87,8 +86,6 @@ describe('Compound API (e2e)', () => {
 
         const expectedTokenBalance = tokenBalance.add(parseBalance(delta));
         await req.get('/compound/token-balance?token=WETH').then(x => {
-            console.log(parseBalance(x.body.WETH).toString())
-            console.log(expectedTokenBalance.toString())
             expect(parseBalance(x.body.WETH).eq(expectedTokenBalance)).toBeTruthy();
         });
 
@@ -113,14 +110,13 @@ describe('Compound API (e2e)', () => {
             wallet,
         );
 
+        const dharmaAddresses = Addresses[NETWORK];
+
         const ltvCreditorProcyContract = new ethers.Contract(
-            LtvCreditorProxy.networks[NETWORK].address,
-            LtvCreditorProxy.abi,
+            dharmaAddresses.LtvCreditorProxy,
+            LtvCreditorProxyAbi,
             wallet,
         );
-
-        // const dharmaAddresses = DharmaAddressBook.latest[NETWORK === 'mainnet' ? 'live' : NETWORK];
-        const dharmaAddresses = DharmaAddressBook.latest[NETWORK];
 
         const tokenRegistryContract = new ethers.Contract(
             dharmaAddresses.TokenRegistry,
@@ -175,7 +171,7 @@ describe('Compound API (e2e)', () => {
                 { provide: 'signer', useValue: wallet },
 
                 { provide: 'dharma-kernel-address', useValue: debtKernelContract.address },
-                { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
+                { provide: 'creditor-proxy-address', useValue: ltvCreditorProcyContract.address },
                 { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
 
                 { provide: 'dharma-kernel-contract', useValue: debtKernelContract },

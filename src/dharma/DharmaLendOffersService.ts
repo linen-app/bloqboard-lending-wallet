@@ -45,7 +45,7 @@ export class DharmaLendOffersService {
             this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
                 .then(x => ({
                     id: relayerOrder.id,
-                    principal: x.principal,
+                    principal: x.principal.toString(),
                     maxLtv: relayerOrder.maxLtv / 100,
                     interestRate: x.interestRate.toNumber() / 100,
                     termLength: x.termLength.toNumber(),
@@ -79,7 +79,7 @@ export class DharmaLendOffersService {
 
         offer.setPrincipalPrice(principalPrice);
         offer.setCollateralPrice(collateralPrice);
-        offer.setCollateralAmount(new BigNumber(collateralAmount.humanReadableAmount.toString()));
+        offer.setCollateralAmount(collateralAmount.rawAmount);
 
         const debtor = this.wallet.address.toLowerCase();
         await offer.signAsDebtor(debtor, false);

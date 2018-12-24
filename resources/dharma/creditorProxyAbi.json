@@ -1,0 +1,1734 @@
+[
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "termsContract",
+          "type": "address"
+        },
+        {
+          "name": "termsContractParameters",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getTermsContractCommitmentHash",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "creditor",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "components": [
+                    {
+                      "name": "maxLTV",
+                      "type": "uint256"
+                    },
+                    {
+                      "name": "priceFeedOperator",
+                      "type": "address"
+                    }
+                  ],
+                  "name": "values",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "creditorCommitment",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "principalPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "collateralPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "kernelVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "issuanceVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "principalAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "principalToken",
+                  "type": "address"
+                },
+                {
+                  "name": "collateralAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "collateralToken",
+                  "type": "address"
+                },
+                {
+                  "name": "debtor",
+                  "type": "address"
+                },
+                {
+                  "name": "debtorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "creditor",
+                  "type": "address"
+                },
+                {
+                  "name": "creditorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "relayer",
+                  "type": "address"
+                },
+                {
+                  "name": "relayerFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriter",
+                  "type": "address"
+                },
+                {
+                  "name": "underwriterFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriterRiskRating",
+                  "type": "uint256"
+                },
+                {
+                  "name": "termsContract",
+                  "type": "address"
+                },
+                {
+                  "name": "termsContractParameters",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "expirationTimestampInSec",
+                  "type": "uint256"
+                },
+                {
+                  "name": "salt",
+                  "type": "uint256"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "debtorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "creditorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "underwriterSignature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "order",
+              "type": "tuple"
+            }
+          ],
+          "name": "params",
+          "type": "tuple"
+        },
+        {
+          "name": "commitmentHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "evaluateConsent",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "creditor",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "components": [
+                    {
+                      "name": "maxLTV",
+                      "type": "uint256"
+                    },
+                    {
+                      "name": "priceFeedOperator",
+                      "type": "address"
+                    }
+                  ],
+                  "name": "values",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "creditorCommitment",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "principalPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "collateralPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "kernelVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "issuanceVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "principalAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "principalToken",
+                  "type": "address"
+                },
+                {
+                  "name": "collateralAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "collateralToken",
+                  "type": "address"
+                },
+                {
+                  "name": "debtor",
+                  "type": "address"
+                },
+                {
+                  "name": "debtorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "creditor",
+                  "type": "address"
+                },
+                {
+                  "name": "creditorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "relayer",
+                  "type": "address"
+                },
+                {
+                  "name": "relayerFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriter",
+                  "type": "address"
+                },
+                {
+                  "name": "underwriterFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriterRiskRating",
+                  "type": "uint256"
+                },
+                {
+                  "name": "termsContract",
+                  "type": "address"
+                },
+                {
+                  "name": "termsContractParameters",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "expirationTimestampInSec",
+                  "type": "uint256"
+                },
+                {
+                  "name": "salt",
+                  "type": "uint256"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "debtorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "creditorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "underwriterSignature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "order",
+              "type": "tuple"
+            }
+          ],
+          "name": "params",
+          "type": "tuple"
+        }
+      ],
+      "name": "evaluateDecision",
+      "outputs": [
+        {
+          "name": "_success",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "name": "hash",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "name": "signature",
+          "type": "tuple"
+        }
+      ],
+      "name": "isValidSignature",
+      "outputs": [
+        {
+          "name": "valid",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "MAX_PRICE_TTL_IN_SECONDS",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "debtOfferCancelled",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "PRECISION",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "contractRegistry",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "debtOfferFilled",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "termsContractParameters",
+          "type": "bytes32"
+        }
+      ],
+      "name": "unpackCollateralParameters",
+      "outputs": [
+        {
+          "components": [
+            {
+              "name": "collateralTokenIndex",
+              "type": "uint256"
+            },
+            {
+              "name": "collateralAmount",
+              "type": "uint256"
+            },
+            {
+              "name": "gracePeriodInDays",
+              "type": "uint256"
+            }
+          ],
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "maxLTV",
+              "type": "uint256"
+            },
+            {
+              "name": "priceFeedOperator",
+              "type": "address"
+            }
+          ],
+          "name": "commitmentValues",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "name": "kernelVersion",
+              "type": "address"
+            },
+            {
+              "name": "issuanceVersion",
+              "type": "address"
+            },
+            {
+              "name": "principalAmount",
+              "type": "uint256"
+            },
+            {
+              "name": "principalToken",
+              "type": "address"
+            },
+            {
+              "name": "collateralAmount",
+              "type": "uint256"
+            },
+            {
+              "name": "collateralToken",
+              "type": "address"
+            },
+            {
+              "name": "debtor",
+              "type": "address"
+            },
+            {
+              "name": "debtorFee",
+              "type": "uint256"
+            },
+            {
+              "name": "creditor",
+              "type": "address"
+            },
+            {
+              "name": "creditorFee",
+              "type": "uint256"
+            },
+            {
+              "name": "relayer",
+              "type": "address"
+            },
+            {
+              "name": "relayerFee",
+              "type": "uint256"
+            },
+            {
+              "name": "underwriter",
+              "type": "address"
+            },
+            {
+              "name": "underwriterFee",
+              "type": "uint256"
+            },
+            {
+              "name": "underwriterRiskRating",
+              "type": "uint256"
+            },
+            {
+              "name": "termsContract",
+              "type": "address"
+            },
+            {
+              "name": "termsContractParameters",
+              "type": "bytes32"
+            },
+            {
+              "name": "expirationTimestampInSec",
+              "type": "uint256"
+            },
+            {
+              "name": "salt",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "name": "v",
+                  "type": "uint8"
+                },
+                {
+                  "name": "r",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "s",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "debtorSignature",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "v",
+                  "type": "uint8"
+                },
+                {
+                  "name": "r",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "s",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "creditorSignature",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "v",
+                  "type": "uint8"
+                },
+                {
+                  "name": "r",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "s",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "underwriterSignature",
+              "type": "tuple"
+            }
+          ],
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "hashCreditorCommitmentForOrder",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "kernelVersion",
+              "type": "address"
+            },
+            {
+              "name": "issuanceVersion",
+              "type": "address"
+            },
+            {
+              "name": "principalAmount",
+              "type": "uint256"
+            },
+            {
+              "name": "principalToken",
+              "type": "address"
+            },
+            {
+              "name": "collateralAmount",
+              "type": "uint256"
+            },
+            {
+              "name": "collateralToken",
+              "type": "address"
+            },
+            {
+              "name": "debtor",
+              "type": "address"
+            },
+            {
+              "name": "debtorFee",
+              "type": "uint256"
+            },
+            {
+              "name": "creditor",
+              "type": "address"
+            },
+            {
+              "name": "creditorFee",
+              "type": "uint256"
+            },
+            {
+              "name": "relayer",
+              "type": "address"
+            },
+            {
+              "name": "relayerFee",
+              "type": "uint256"
+            },
+            {
+              "name": "underwriter",
+              "type": "address"
+            },
+            {
+              "name": "underwriterFee",
+              "type": "uint256"
+            },
+            {
+              "name": "underwriterRiskRating",
+              "type": "uint256"
+            },
+            {
+              "name": "termsContract",
+              "type": "address"
+            },
+            {
+              "name": "termsContractParameters",
+              "type": "bytes32"
+            },
+            {
+              "name": "expirationTimestampInSec",
+              "type": "uint256"
+            },
+            {
+              "name": "salt",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "name": "v",
+                  "type": "uint8"
+                },
+                {
+                  "name": "r",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "s",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "debtorSignature",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "v",
+                  "type": "uint8"
+                },
+                {
+                  "name": "r",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "s",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "creditorSignature",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "v",
+                  "type": "uint8"
+                },
+                {
+                  "name": "r",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "s",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "underwriterSignature",
+              "type": "tuple"
+            }
+          ],
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "name": "unpackDebtOrder",
+      "outputs": [
+        {
+          "name": "orderAddresses",
+          "type": "address[6]"
+        },
+        {
+          "name": "orderValues",
+          "type": "uint256[8]"
+        },
+        {
+          "name": "orderBytes32",
+          "type": "bytes32[1]"
+        },
+        {
+          "name": "signaturesV",
+          "type": "uint8[3]"
+        },
+        {
+          "name": "signaturesR",
+          "type": "bytes32[3]"
+        },
+        {
+          "name": "signaturesS",
+          "type": "bytes32[3]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "termsContract",
+          "type": "address"
+        },
+        {
+          "name": "termsContractParameters",
+          "type": "bytes32"
+        }
+      ],
+      "name": "unpackSimpleInterestParameters",
+      "outputs": [
+        {
+          "components": [
+            {
+              "name": "principalTokenIndex",
+              "type": "uint256"
+            },
+            {
+              "name": "principalAmount",
+              "type": "uint256"
+            },
+            {
+              "name": "interestRate",
+              "type": "uint256"
+            },
+            {
+              "name": "amortizationUnitType",
+              "type": "uint256"
+            },
+            {
+              "name": "termLengthInAmortizationUnits",
+              "type": "uint256"
+            }
+          ],
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "EXTERNAL_QUERY_GAS_LIMIT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_contractRegistry",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "_creditor",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "_creditorCommitmentHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "DebtOfferCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "_creditor",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "_creditorCommitmentHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "name": "_agreementId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "DebtOfferFilled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "_errorId",
+          "type": "uint8"
+        },
+        {
+          "indexed": true,
+          "name": "_creditor",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "_creditorCommitmentHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "CreditorProxyError",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "creditor",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "components": [
+                    {
+                      "name": "maxLTV",
+                      "type": "uint256"
+                    },
+                    {
+                      "name": "priceFeedOperator",
+                      "type": "address"
+                    }
+                  ],
+                  "name": "values",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "creditorCommitment",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "principalPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "collateralPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "kernelVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "issuanceVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "principalAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "principalToken",
+                  "type": "address"
+                },
+                {
+                  "name": "collateralAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "collateralToken",
+                  "type": "address"
+                },
+                {
+                  "name": "debtor",
+                  "type": "address"
+                },
+                {
+                  "name": "debtorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "creditor",
+                  "type": "address"
+                },
+                {
+                  "name": "creditorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "relayer",
+                  "type": "address"
+                },
+                {
+                  "name": "relayerFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriter",
+                  "type": "address"
+                },
+                {
+                  "name": "underwriterFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriterRiskRating",
+                  "type": "uint256"
+                },
+                {
+                  "name": "termsContract",
+                  "type": "address"
+                },
+                {
+                  "name": "termsContractParameters",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "expirationTimestampInSec",
+                  "type": "uint256"
+                },
+                {
+                  "name": "salt",
+                  "type": "uint256"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "debtorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "creditorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "underwriterSignature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "order",
+              "type": "tuple"
+            }
+          ],
+          "name": "params",
+          "type": "tuple"
+        }
+      ],
+      "name": "fillDebtOffer",
+      "outputs": [
+        {
+          "name": "agreementId",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "creditor",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "components": [
+                    {
+                      "name": "maxLTV",
+                      "type": "uint256"
+                    },
+                    {
+                      "name": "priceFeedOperator",
+                      "type": "address"
+                    }
+                  ],
+                  "name": "values",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "creditorCommitment",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "principalPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "uint256"
+                },
+                {
+                  "name": "tokenAddress",
+                  "type": "address"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "signature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "collateralPrice",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "kernelVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "issuanceVersion",
+                  "type": "address"
+                },
+                {
+                  "name": "principalAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "principalToken",
+                  "type": "address"
+                },
+                {
+                  "name": "collateralAmount",
+                  "type": "uint256"
+                },
+                {
+                  "name": "collateralToken",
+                  "type": "address"
+                },
+                {
+                  "name": "debtor",
+                  "type": "address"
+                },
+                {
+                  "name": "debtorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "creditor",
+                  "type": "address"
+                },
+                {
+                  "name": "creditorFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "relayer",
+                  "type": "address"
+                },
+                {
+                  "name": "relayerFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriter",
+                  "type": "address"
+                },
+                {
+                  "name": "underwriterFee",
+                  "type": "uint256"
+                },
+                {
+                  "name": "underwriterRiskRating",
+                  "type": "uint256"
+                },
+                {
+                  "name": "termsContract",
+                  "type": "address"
+                },
+                {
+                  "name": "termsContractParameters",
+                  "type": "bytes32"
+                },
+                {
+                  "name": "expirationTimestampInSec",
+                  "type": "uint256"
+                },
+                {
+                  "name": "salt",
+                  "type": "uint256"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "debtorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "creditorSignature",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "v",
+                      "type": "uint8"
+                    },
+                    {
+                      "name": "r",
+                      "type": "bytes32"
+                    },
+                    {
+                      "name": "s",
+                      "type": "bytes32"
+                    }
+                  ],
+                  "name": "underwriterSignature",
+                  "type": "tuple"
+                }
+              ],
+              "name": "order",
+              "type": "tuple"
+            }
+          ],
+          "name": "params",
+          "type": "tuple"
+        }
+      ],
+      "name": "cancelDebtOffer",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]

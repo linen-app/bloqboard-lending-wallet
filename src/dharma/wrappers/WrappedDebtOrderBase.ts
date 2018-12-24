@@ -13,7 +13,7 @@ export abstract class WrappedDebtOrderBase {
      * @return Hash of the issuance commitment associated with this debt order.
      */
     protected getIssuanceCommitmentHash(): string {
-        return Web3Utils.soliditySHA3(
+        return Web3Utils.soliditySha3(
             this.debtOrderData.issuanceVersion,
             this.debtOrderData.debtor,
             this.debtOrderData.underwriter,
@@ -32,7 +32,7 @@ export abstract class WrappedDebtOrderBase {
      * @return The debt order's hash
      */
     protected getHash(): string {
-        return Web3Utils.soliditySHA3(
+        return Web3Utils.soliditySha3(
             this.debtOrderData.kernelVersion,
             this.getIssuanceCommitmentHash(),
             this.debtOrderData.underwriterFee.rawAmount.toString(),

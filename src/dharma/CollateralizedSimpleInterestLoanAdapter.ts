@@ -23,7 +23,7 @@ export class CollateralizedSimpleInterestLoanAdapter {
         const principalToken = this.tokenService.getTokenByAddress(order.principalTokenAddress);
 
         const collateralTokenAddress: Address = await this.dharmaTokenRegistry.getTokenAddressByIndex(
-            params.collateralTokenIndex.toNumber(),
+            params.collateralTokenIndex,
         );
 
         const collateralToken = await this.tokenService.getTokenByAddress(collateralTokenAddress);
@@ -56,7 +56,7 @@ export class CollateralizedSimpleInterestLoanAdapter {
             principalTokenIndex: params.principalTokenIndex,
             collateralTokenIndex: params.collateralTokenIndex,
 
-            maxLtv: new BigNumber(order.maxLtv),
+            maxLtv: order.maxLtv && new BigNumber(order.maxLtv),
             priceProvider: order.signerAddress,
         };
 

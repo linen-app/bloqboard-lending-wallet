@@ -2,7 +2,7 @@ import { BigNumber } from 'bignumber.js';
 
 export interface SimpleInterestContractTerms {
     principalTokenIndex: number;
-    principalAmount: number;
+    principalAmount: string;
     interestRateFixedPoint: number;
     amortizationUnitType: number;
     termLengthUnits: number;
@@ -10,12 +10,12 @@ export interface SimpleInterestContractTerms {
 
 export interface CollateralizedContractTerms {
     collateralTokenIndex: number;
-    collateralAmount: number;
+    collateralAmount: string;
     gracePeriodInDays: number;
 }
 
 export class CollateralizedSimpleInterestTermsParameters {
-    public static bitShiftLeft(target: number, numPlaces: number): BigNumber {
+    public static bitShiftLeft(target: number | string, numPlaces: number): BigNumber {
         const binaryTargetString = new BigNumber(target).toString(2);
         const binaryTargetStringShifted = binaryTargetString + '0'.repeat(numPlaces);
 
@@ -46,7 +46,7 @@ export class CollateralizedSimpleInterestTermsParameters {
         const packedTermsParameters =  `0x${baseTenParameters.toString(16).padStart(64, '0')}`;
 
         const encodedCollateralToken = collateralTerms.collateralTokenIndex.toString(16).padStart(2, '0');
-        const encodedCollateralAmount = collateralTerms.collateralAmount.toString(16).padStart(23, '0');
+        const encodedCollateralAmount = new BigNumber(collateralTerms.collateralAmount).toString(16).padStart(23, '0');
         const encodedGracePeriodInDays = collateralTerms.gracePeriodInDays.toString(16).padStart(2, '0');
 
         const packedCollateralParameters = encodedCollateralToken + encodedCollateralAmount + encodedGracePeriodInDays;

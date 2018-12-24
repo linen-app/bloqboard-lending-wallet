@@ -38,8 +38,8 @@ export class DharmaDebtRequestService {
             this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
                 .then(x => ({
                     id: relayerOrder.id,
-                    principal: x.principal,
-                    collateral: x.collateral,
+                    principal: x.principal.toString(),
+                    collateral: x.collateral.toString(),
                     interestRate: x.interestRate.toNumber() / 100,
                     termLength: x.termLength.toNumber(),
                     amortizationUnit: x.amortizationUnit,

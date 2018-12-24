@@ -1,0 +1,18 @@
+{
+    "mainnet": {
+        "Collateralizer": "0xecc718386176d714dc9e4e35e177396b291499ee",
+        "DebtKernel": "0x8ef1351941d0cd8da09d5a4c74f2d64503031a18",
+        "RepaymentRouter": "0xc1df9b92645cc3b6733992c692a39c34a86fae5f",
+        "TokenRegistry": "0xd79396ab3bfaaa0d9f6d11f95bb641601d93c0a9",
+        "TokenTransferProxy": "0x2f40766e91aaee4794d3389ac8dc3a4b8fd7ab3e",
+        "LtvCreditorProxy": "0xa9d37fd3dc36418e806dbbc16fe991c284940858"
+    },
+    "kovan": {
+        "Collateralizer": "0x69cad9c821a3be7dbcd54d53c5703b3b8d259741",
+        "DebtKernel": "0x2bf92c849036c6f270129c33d2760d8ba379ddaa",
+        "RepaymentRouter": "0xe1e84ab74581ca329b3b4a4804b85c464d2d2925",
+        "TokenRegistry": "0x918dc1e780a6096a3ed3e5386d260aae48da9b12",
+        "TokenTransferProxy": "0x752079dfeb0ad8a6bac28ae6e051f3f953a90658",
+        "LtvCreditorProxy": "0x4e6E3348790b65EfE5c61ced27E1c12F42fd2846"
+    }
+}

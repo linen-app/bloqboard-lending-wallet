@@ -4,6 +4,9 @@ import { DharmaDebtRequestService } from './DharmaDebtRequestService';
 import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { DharmaLendOffersService } from './DharmaLendOffersService';
 import { ParseNumberPipe } from '../parseNumber.pipe';
+import { TokenSymbol } from 'src/tokens/TokenSymbol';
+
+const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
 @Controller('dharma')
 @ApiUseTags('Dharma @ Bloqboard')
@@ -14,11 +17,17 @@ export class DharmaController {
     ) { }
 
     @Get('debt-orders')
+    @ApiImplicitQuery({ name: 'principalToken', enum: supportedTokens, required: false })
+    @ApiImplicitQuery({ name: 'collateralToken', enum: supportedTokens, required: false })
+    @ApiImplicitQuery({ name: 'minUsdAmount', required: false })
+    @ApiImplicitQuery({ name: 'maxUsdAmount', required: false })
     async getDebtOrders(
-        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
         @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
+        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
+        @Query('collateralToken') collateralToken: TokenSymbol,
+        @Query('principalToken') principalToken: TokenSymbol,
     ): Promise<any> {
-        const debtOrders = await this.dharmaLoanRequestsService.getDebtOrders(null, null, minUsdAmount, maxUsdAmount);
+        const debtOrders = await this.dharmaLoanRequestsService.getDebtOrders(principalToken, collateralToken, minUsdAmount, maxUsdAmount);
 
         return debtOrders;
     }
@@ -35,11 +44,17 @@ export class DharmaController {
     }
 
     @Get('lend-offers')
+    @ApiImplicitQuery({ name: 'principalToken', enum: supportedTokens, required: false })
+    @ApiImplicitQuery({ name: 'collateralToken', enum: supportedTokens, required: false })
+    @ApiImplicitQuery({ name: 'minUsdAmount', required: false })
+    @ApiImplicitQuery({ name: 'maxUsdAmount', required: false })
     async getLendOffers(
-        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
         @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
+        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
+        @Query('collateralToken') collateralToken: TokenSymbol,
+        @Query('principalToken') principalToken: TokenSymbol,
     ): Promise<any> {
-        const offers = await this.dharmaLendOffersService.getLendOffers(null, null, minUsdAmount, maxUsdAmount);
+        const offers = await this.dharmaLendOffersService.getLendOffers(principalToken, collateralToken, minUsdAmount, maxUsdAmount);
 
         return offers;
     }

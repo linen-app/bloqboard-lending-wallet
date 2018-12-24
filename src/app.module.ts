@@ -3,15 +3,14 @@ import { ethers } from 'ethers';
 import winston = require('winston');
 import { format } from 'winston';
 import { WinstonModule } from 'nest-winston';
-import * as DharmaAddressBook from 'dharma-address-book';
 import * as ContractArtifacts from 'dharma-contract-artifacts';
 
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
-import * as LtvCreditorProxy from '../resources/dharma/creditor-proxy.json';
 import * as Account from '../resources/account.json';
 import * as Tokens from '../resources/tokens.json';
-import * as CreditorProxy from '../resources/dharma/creditor-proxy.json';
+import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json';
+import * as Addresses from '../resources/dharma/addresses.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 
@@ -46,13 +45,13 @@ const kyberContract = new ethers.Contract(
     wallet,
 );
 
-const ltvCreditorProcyContract = new ethers.Contract(
-    LtvCreditorProxy.networks[NETWORK].address,
-    LtvCreditorProxy.abi,
+const dharmaAddresses = Addresses[NETWORK];
+
+const ltvCreditorProxyContract = new ethers.Contract(
+    dharmaAddresses.LtvCreditorProxy,
+    LtvCreditorProxyAbi,
     wallet,
 );
-
-const dharmaAddresses = DharmaAddressBook.latest[NETWORK === 'mainnet' ? 'live' : NETWORK];
 
 const tokenRegistryContract = new ethers.Contract(
     dharmaAddresses.TokenRegistry,
@@ -109,14 +108,14 @@ const collateralizedContract = new ethers.Contract(
         { provide: 'signer', useValue: wallet },
 
         { provide: 'dharma-kernel-address', useValue: debtKernelContract.address },
-        { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
+        { provide: 'creditor-proxy-address', useValue: ltvCreditorProxyContract.address },
         { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
 
         { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
         { provide: 'repayment-router-contract', useValue: repaymentRouterContract },
         { provide: 'collateralizer-contract', useValue: collateralizedContract },
         { provide: 'dharma-token-registry-contract', useValue: tokenRegistryContract },
-        { provide: 'ltv-creditor-proxy-contract', useValue: ltvCreditorProcyContract },
+        { provide: 'ltv-creditor-proxy-contract', useValue: ltvCreditorProxyContract },
         { provide: 'money-market-contract', useValue: moneyMarketContract },
         { provide: 'kyber-contract', useValue: kyberContract },
     ],

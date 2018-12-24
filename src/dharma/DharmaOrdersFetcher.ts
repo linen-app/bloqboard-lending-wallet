@@ -6,7 +6,7 @@ import { Address } from 'src/types';
 import { TokenService } from '../tokens/TokenService';
 import { stringify } from 'qs';
 import { Logger } from 'winston';
-import { TokenSymbol } from "../tokens/TokenSymbol";
+import { TokenSymbol } from '../tokens/TokenSymbol';
 
 @Injectable()
 export class DharmaOrdersFetcher {
@@ -15,8 +15,7 @@ export class DharmaOrdersFetcher {
         @Inject('dharma-kernel-address') private readonly dharmaKernelAddress: Address,
         @Inject('winston') private readonly logger: Logger,
         private readonly tokenService: TokenService,
-    )
-    {}
+    ) { }
     async fetchOrder(offerId: string): Promise<RelayerDebtOrder> {
         const debtsUrl = `${this.bloqboardUri}/Debts`;
         const response = await Axios.get(`${debtsUrl}/${offerId}`, {
@@ -42,21 +41,25 @@ export class DharmaOrdersFetcher {
         const collateralToken = collateralTokenSymbol && this.tokenService.getTokenBySymbol(collateralTokenSymbol);
 
         const filter = {
-            // principalTokenAddresses: principalTokenAddress && [principalTokenAddress],
-            // collateralTokenAddresses: collateralTokenAddress && [collateralTokenAddress],
+            principalTokenAddresses: principalToken && [principalToken.address],
+            collateralTokenAddresses: collateralToken && [collateralToken.address],
             amountFrom: minUsdAmount,
             amountTo: maxUsdAmount,
         };
 
+        const params = {
+            status, ...pagination, kernelAddress, ...sorting, ...filter,
+        };
+
+        const str = (parameters: any) => stringify(parameters, { allowDots: true, arrayFormat: 'repeat' });
+
         const response = await Axios.get(debtsUrl, {
-            params: {
-                status, ...pagination, kernelAddress, ...sorting, ...filter,
-            },
-            paramsSerializer: (params) => stringify(params, { allowDots: true, arrayFormat: 'repeat' }),
+            params,
+            paramsSerializer: str,
             httpsAgent: new Agent({ rejectUnauthorized: false }),
         });
 
-        this.logger.info(`Recieved ${response.data.length} debt orders from ${response.config.url}${response.request.path}`);
+        this.logger.info(`Recieved ${response.data.length} debt orders from ${response.config.url}?${str(params)}`);
 
         return response.data;
     }
