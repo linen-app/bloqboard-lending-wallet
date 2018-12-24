@@ -1,8 +1,9 @@
-import { Get, Controller, Post, Query, Res, HttpStatus, ParseIntPipe, Param } from '@nestjs/common';
+import { Get, Controller, Post, Query, Res, HttpStatus, Param } from '@nestjs/common';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { DharmaDebtRequestService } from './DharmaDebtRequestService';
 import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { DharmaLendOffersService } from './DharmaLendOffersService';
+import { ParseNumberPipe } from '../parseNumber.pipe';
 
 @Controller('dharma')
 @ApiUseTags('Dharma @ Bloqboard')
@@ -14,8 +15,8 @@ export class DharmaController {
 
     @Get('debt-orders')
     async getDebtOrders(
-        @Query('minUsdAmount', ParseIntPipe) minUsdAmount: number,
-        @Query('maxUsdAmount', ParseIntPipe) maxUsdAmount: number,
+        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
+        @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
     ): Promise<any> {
         const debtOrders = await this.dharmaLoanRequestsService.getDebtOrders(null, null, minUsdAmount, maxUsdAmount);
 
@@ -35,8 +36,8 @@ export class DharmaController {
 
     @Get('lend-offers')
     async getLendOffers(
-        @Query('minUsdAmount', ParseIntPipe) minUsdAmount: number,
-        @Query('maxUsdAmount', ParseIntPipe) maxUsdAmount: number,
+        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
+        @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
     ): Promise<any> {
         const offers = await this.dharmaLendOffersService.getLendOffers(null, null, minUsdAmount, maxUsdAmount);
 

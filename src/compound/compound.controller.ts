@@ -1,10 +1,11 @@
-import { Get, Controller, Post, Query, Res, HttpStatus, ParseIntPipe } from '@nestjs/common';
+import { Get, Controller, Post, Query, Res, HttpStatus } from '@nestjs/common';
 import { CompoundService } from './compound.service';
 import { TokenService } from '../tokens/TokenService';
 import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { utils } from 'ethers';
 import { TokenSymbol } from '../tokens/TokenSymbol';
+import { ParseNumberPipe } from '../parseNumber.pipe';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
@@ -63,7 +64,7 @@ export class CompoundController {
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async supply(
         @Query('token') token: TokenSymbol,
-        @Query('amount', ParseIntPipe) amount: number,
+        @Query('amount', ParseNumberPipe) amount: number,
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<string> {
@@ -75,7 +76,7 @@ export class CompoundController {
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async withdraw(
         @Query('token') token: TokenSymbol,
-        @Query('amount', ParseIntPipe) amount: number,
+        @Query('amount', ParseNumberPipe) amount: number,
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<string> {
@@ -87,7 +88,7 @@ export class CompoundController {
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async borrow(
         @Query('token') token: TokenSymbol,
-        @Query('amount', ParseIntPipe) amount: number,
+        @Query('amount', ParseNumberPipe) amount: number,
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<string> {
@@ -99,7 +100,7 @@ export class CompoundController {
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     async repayBorrow(
         @Query('token') token: TokenSymbol,
-        @Query('amount', ParseIntPipe) amount: number,
+        @Query('amount', ParseNumberPipe) amount: number,
         @Query('utilizeOtherTokens', ParseBooleanPipe) utilizeOtherTokens: boolean,
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
