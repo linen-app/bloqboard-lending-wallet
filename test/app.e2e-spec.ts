@@ -3,41 +3,147 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { WinstonModule } from 'nest-winston';
 import * as request from 'supertest';
 import { ethers, Contract, utils } from 'ethers';
-import { CompoundService } from '../src/compound/compound.service';
-import { KyberService } from '../src/kyber/kyber.service';
-import { CompoundController } from '../src/compound/compound.controller';
-import * as Compound from '../resources/money-market.json';
-import * as Kyber from '../resources/kyber-network-proxy.json';
 import winston = require('winston');
 import { format } from 'winston';
-import { TokenMetadata } from '../src/tokens/TokenMetadata';
+import * as DharmaAddressBook from 'dharma-address-book';
+import * as ContractArtifacts from 'dharma-contract-artifacts';
+
+import { CompoundController } from '../src/compound/compound.controller';
+import { CompoundService } from '../src/compound/compound.service';
 import { TokenService } from '../src/tokens/TokenService';
+import { KyberService } from '../src/kyber/kyber.service';
+import { DharmaDebtRequestService } from '../src/dharma/DharmaDebtRequestService';
+import { CollateralizedSimpleInterestLoanAdapter } from '../src/dharma/CollateralizedSimpleInterestLoanAdapter';
+import { DharmaOrdersFetcher } from '../src/dharma/DharmaOrdersFetcher';
+import { DharmaLendOffersService } from '../src/dharma/DharmaLendOffersService';
+import { TokenMetadata } from '../src/tokens/TokenMetadata';
+import { DebtOrderWrapper } from '../src/dharma/wrappers/DebtOrderWrapper';
+import { MessageSigner } from '../src/dharma/MessageSigner';
 import { TokenSymbol } from '../src/tokens/TokenSymbol';
+
+import * as Compound from '../resources/money-market.json';
+import * as Kyber from '../resources/kyber-network-proxy.json';
+import * as LtvCreditorProxy from '../resources/dharma/creditor-proxy.json';
+import * as Account from '../resources/account.json';
+import * as Tokens from '../resources/tokens.json';
+import * as CreditorProxy from '../resources/dharma/creditor-proxy.json';
+import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
+import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
+
+const parseBalance = (balance: number | string) => utils.parseEther(balance.toString());
+const delta = '0.0001';
 
 describe('Compound API (e2e)', () => {
     let app: INestApplication;
     let moduleFixture: TestingModule;
 
+    it('/token-balance (GET)', () => {
+        return request(app.getHttpServer())
+            .get('/compound/token-balance?token=WETH')
+            .expect(200)
+            .expect(res => {
+                if (!('WETH' in res.body)) throw new Error('missing token key');
+                const isMatch = /[0-9]*\.?[0-9]+/.test(res.body.WETH);
+                if (!isMatch) throw new Error(`Is not numeric value: ${res.body.amount}`);
+            });
+    });
+
+    it('/supply (POST)', async () => {
+        const tokenService = moduleFixture.get<TokenService>(TokenService);
+        const moneyMarketContract = moduleFixture.get<Contract>('money-market-contract');
+        const req = request(app.getHttpServer());
+
+        const lockTx = await tokenService.lockToken(TokenSymbol.WETH, moneyMarketContract.address);
+        await lockTx.wait();
+
+        const rawTokenBalance = (await req.get('/compound/token-balance?token=WETH')).body.WETH;
+        const tokenBalance = parseBalance(rawTokenBalance);
+        expect(tokenBalance.gte(parseBalance(delta))).toBeTruthy();
+
+        const rawSupplyBalance = (await req.get('/compound/supply-balance?token=WETH')).body.WETH;
+        const supplyBalance = parseBalance(rawSupplyBalance);
+
+        await req.post(`/compound/supply?token=WETH&amount=${delta}&needAwaitMining=true`);
+
+        const expectedTokenBalance = tokenBalance.sub(parseBalance(delta));
+        await req.get('/compound/token-balance?token=WETH').then(x => {
+            expect(parseBalance(x.body.WETH).eq(expectedTokenBalance)).toBeTruthy();
+        });
+
+        const expectedSupplyBalance = supplyBalance.add(parseBalance(delta));
+        await req.get('/compound/supply-balance?token=WETH').then(x => {
+            // gte, because between transaction and check some interest can be accumulated
+            expect(parseBalance(x.body.WETH).gte(expectedSupplyBalance)).toBeTruthy();
+        });
+    });
+
+    it('/withdraw (POST)', async () => {
+        const req = request(app.getHttpServer());
+
+        const rawTokenBalance = (await req.get('/compound/token-balance?token=WETH')).body.WETH;
+        const tokenBalance = parseBalance(rawTokenBalance);
+
+        await req.post(`/compound/withdraw?token=WETH&amount=${delta}&needAwaitMining=true`);
+
+        const expectedTokenBalance = tokenBalance.add(parseBalance(delta));
+        await req.get('/compound/token-balance?token=WETH').then(x => {
+            console.log(parseBalance(x.body.WETH).toString())
+            console.log(expectedTokenBalance.toString())
+            expect(parseBalance(x.body.WETH).eq(expectedTokenBalance)).toBeTruthy();
+        });
+
+    });
+
     beforeAll(async () => {
         jest.setTimeout(120000);
-        const NETWORK = 'rinkeby';
+        const NETWORK = 'kovan';
         const provider = ethers.getDefaultProvider(NETWORK);
-        const privateKey = require('../resources/account.json').privateKey;
+        const privateKey = Account.privateKey;
         const wallet = new ethers.Wallet(privateKey, provider);
+        const tokens: TokenMetadata[] = Tokens.networks[NETWORK].map(x => x as TokenMetadata);
 
         const moneyMarketContract = new ethers.Contract(
             Compound.networks[NETWORK].address,
             Compound.abi,
             wallet,
         );
-
         const kyberContract = new ethers.Contract(
             Kyber.networks[NETWORK].address,
             Kyber.abi,
             wallet,
         );
 
-        const tokens: TokenMetadata[] = require('../resources/tokens.json').networks[NETWORK];
+        const ltvCreditorProcyContract = new ethers.Contract(
+            LtvCreditorProxy.networks[NETWORK].address,
+            LtvCreditorProxy.abi,
+            wallet,
+        );
+
+        // const dharmaAddresses = DharmaAddressBook.latest[NETWORK === 'mainnet' ? 'live' : NETWORK];
+        const dharmaAddresses = DharmaAddressBook.latest[NETWORK];
+
+        const tokenRegistryContract = new ethers.Contract(
+            dharmaAddresses.TokenRegistry,
+            ContractArtifacts.latest.TokenRegistry,
+            wallet,
+        );
+        const debtKernelContract = new ethers.Contract(
+            dharmaAddresses.DebtKernel,
+            ContractArtifacts.latest.DebtKernel,
+            wallet,
+        );
+
+        const repaymentRouterContract = new ethers.Contract(
+            dharmaAddresses.RepaymentRouter,
+            ContractArtifacts.latest.RepaymentRouter,
+            wallet,
+        );
+
+        const collateralizedContract = new ethers.Contract(
+            dharmaAddresses.Collateralizer,
+            ContractArtifacts.latest.Collateralizer,
+            wallet,
+        );
 
         moduleFixture = await Test.createTestingModule({
             imports: [WinstonModule.forRoot({
@@ -56,83 +162,33 @@ describe('Compound API (e2e)', () => {
                 CompoundService,
                 KyberService,
                 TokenService,
-                {
-                    provide: 'wallet',
-                    useValue: wallet,
-                },
-                {
-                    provide: 'tokens',
-                    useValue: tokens,
-                },
-                {
-                    provide: 'money-market-contract',
-                    useValue: moneyMarketContract,
-                },
-                {
-                    provide: 'kyber-contract',
-                    useValue: kyberContract,
-                },
+                DharmaDebtRequestService,
+                DharmaLendOffersService,
+                CollateralizedSimpleInterestLoanAdapter,
+                DharmaOrdersFetcher,
+                DebtOrderWrapper,
+                MessageSigner,
+                { provide: 'bloqboard-uri', useValue: BloqboardAPI.networks[NETWORK] },
+                { provide: 'currency-rates-uri', useValue: CurrencyRatesAPI.networks[NETWORK] },
+                { provide: 'wallet', useValue: wallet },
+                { provide: 'tokens', useValue: tokens },
+                { provide: 'signer', useValue: wallet },
+
+                { provide: 'dharma-kernel-address', useValue: debtKernelContract.address },
+                { provide: 'creditor-proxy-address', useValue: CreditorProxy.networks[NETWORK].address },
+                { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
+
+                { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
+                { provide: 'repayment-router-contract', useValue: repaymentRouterContract },
+                { provide: 'collateralizer-contract', useValue: collateralizedContract },
+                { provide: 'dharma-token-registry-contract', useValue: tokenRegistryContract },
+                { provide: 'ltv-creditor-proxy-contract', useValue: ltvCreditorProcyContract },
+                { provide: 'money-market-contract', useValue: moneyMarketContract },
+                { provide: 'kyber-contract', useValue: kyberContract },
             ],
         }).compile();
 
         app = moduleFixture.createNestApplication();
         await app.init();
-    });
-
-    it('/token-balance (GET)', () => {
-        return request(app.getHttpServer())
-            .get('/token-balance?token=WETH')
-            .expect(200)
-            .expect(res => {
-                if (!('WETH' in res.body)) throw new Error('missing token key');
-                const isMatch = /[0-9]*\.?[0-9]+/.test(res.body.WETH);
-                if (!isMatch) throw new Error(`Is not numeric value: ${res.body.amount}`);
-            });
-    });
-
-    it('/supply (POST)', async () => {
-        const tokenService = moduleFixture.get<TokenService>(TokenService);
-        const moneyMarketContract = moduleFixture.get<Contract>('money-market-contract');
-        const delta = '0.0001';
-        const req = request(app.getHttpServer());
-
-        const lockTx = await tokenService.lockToken(TokenSymbol.WETH, moneyMarketContract.address);
-        await lockTx.wait();
-
-        const rawTokenBalance = (await req.get('/token-balance?token=WETH')).body.WETH;
-        const tokenBalance = utils.parseEther(rawTokenBalance);
-        expect(tokenBalance.gte(utils.parseEther(delta))).toBeTruthy();
-
-        const rawSupplyBalance = (await req.get('/supply-balance?token=WETH')).body.WETH;
-        const supplyBalance = utils.parseEther(rawSupplyBalance);
-
-        await req.post(`/supply?token=WETH&amount=${delta}&needAwaitMining=true`);
-
-        const expectedTokenBalance = tokenBalance.sub(utils.parseEther(delta));
-        await req.get('/token-balance?token=WETH').then(x => {
-            expect(utils.parseEther(x.body.WETH).eq(expectedTokenBalance)).toBeTruthy();
-        });
-
-        const expectedSupplyBalance = supplyBalance.add(utils.parseEther(delta));
-        await req.get('/supply-balance?token=WETH').then(x => {
-            // gte, because between transaction and check some interest can be accumulated
-            expect(utils.parseEther(x.body.WETH).gte(expectedSupplyBalance)).toBeTruthy();
-        });
-    });
-
-    it('/withdraw (POST)', async () => {
-        const delta = '0.0001';
-        const req = request(app.getHttpServer());
-
-        const rawTokenBalance = (await req.get('/token-balance?token=WETH')).body.WETH;
-        const tokenBalance = utils.parseEther(rawTokenBalance);
-
-        await req.post(`/withdraw?token=WETH&amount=${delta}&needAwaitMining=true`);
-
-        const expectedTokenBalance = tokenBalance.add(utils.parseEther(delta));
-        await req.get('/token-balance?token=WETH').then(x => {
-            expect(utils.parseEther(x.body.WETH).eq(expectedTokenBalance)).toBeTruthy();
-        });
-
     });
 });

@@ -119,7 +119,7 @@ export class CompoundService {
         const balance = await this.tokenService.getTokenBalance(symbol);
         this.logger.info(`utilizeOtherTokens: ${utilizeOtherTokens}`);
         if (neededTokenAmount.gt(balance.rawAmount) && utilizeOtherTokens) {
-            const additionalTokenAmount = neededTokenAmount.sub(balance.rawAmount);
+            const additionalTokenAmount = neededTokenAmount.sub(balance.rawAmount).mul(1.0001);
             this.logger.info(`buying additional TokenAmount: ${additionalTokenAmount.toString()}`);
             const kyberTxs = await this.kyberService.buyTokenRawAmount(
                 new TokenAmount(additionalTokenAmount, tokenAmount.token),
@@ -136,7 +136,7 @@ export class CompoundService {
             { nonce: transactions.getNextNonce(), gasLimit: 300000 },
         );
 
-        this.logger.info(`Repaying ${tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ? 'ALL' + symbol : tokenAmount}`);
+        this.logger.info(`Repaying ${tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ? 'ALL ' + symbol : tokenAmount}`);
 
         transactions.add({
             name: 'repayBorrow',

@@ -7,12 +7,16 @@ import { BigNumber } from 'ethers/utils';
 
 import { ECDSASignature } from '../models/ECDSASignature';
 import { Price } from '../models/Price';
-import { Address } from 'src/types';
+import { Address } from '../../types';
 import { UnpackedDebtOrderData } from '../models/UnpackedDebtOrderData';
 import { WrappedDebtOrderBase } from './WrappedDebtOrderBase';
 import { MessageSigner } from '../MessageSigner';
-import { TokenAmount } from 'src/tokens/TokenAmount';
-import { CollateralizedContractTerms, SimpleInterestContractTerms, CollateralizedSimpleInterestTermsParameters } from '../ltv-creditor-proxy-wrapper/TermsContractParameters';
+import { TokenAmount } from '../../tokens/TokenAmount';
+import {
+    CollateralizedContractTerms,
+    SimpleInterestContractTerms,
+    CollateralizedSimpleInterestTermsParameters,
+} from '../ltv-creditor-proxy-wrapper/TermsContractParameters';
 
 const MAX_LTV_LOAN_OFFER_ERRORS = {
     IS_NOT_SIGNED_BY_CREDITOR: () => `The creditor has not signed the loan offer.`,

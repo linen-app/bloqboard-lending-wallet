@@ -95,7 +95,7 @@ export class KyberService {
 
         const tradeTx = await this.kyberContract.trade(
             tokenToSell.address,
-            amountToSell,
+            amountToSell.rawAmount,
             amountToBuy.token.address,
             this.wallet.address,
             amountToBuy.rawAmount,
