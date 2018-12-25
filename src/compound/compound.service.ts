@@ -119,7 +119,9 @@ export class CompoundService {
         const balance = await this.tokenService.getTokenBalance(symbol);
         this.logger.info(`utilizeOtherTokens: ${utilizeOtherTokens}`);
         if (neededTokenAmount.gt(balance.rawAmount) && utilizeOtherTokens) {
-            const additionalTokenAmount = neededTokenAmount.sub(balance.rawAmount).mul(1.0001);
+            let additionalTokenAmount = neededTokenAmount.sub(balance.rawAmount);
+            const smallAddition = additionalTokenAmount.div(1000);
+            additionalTokenAmount = additionalTokenAmount.add(smallAddition);
             this.logger.info(`buying additional TokenAmount: ${additionalTokenAmount.toString()}`);
             const kyberTxs = await this.kyberService.buyTokenRawAmount(
                 new TokenAmount(additionalTokenAmount, tokenAmount.token),
