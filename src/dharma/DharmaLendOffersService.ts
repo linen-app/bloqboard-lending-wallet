@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import Axios from 'axios';
 import { Agent } from 'https';
-import { Wallet } from 'ethers';
+import { Wallet, constants } from 'ethers';
 import { CollateralizedSimpleInterestLoanAdapter } from './CollateralizedSimpleInterestLoanAdapter';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TokenMetadata } from '../tokens/TokenMetadata';
@@ -126,21 +126,37 @@ export class DharmaLendOffersService {
         const rawOrder = await this.ordersFetcher.fetchOrder(lendOfferId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
         const amount = TokenAmount.fromHumanReadable(humanReadableAmount, order.principal.token);
+        const wrappedOffer = this.debtOrderWrapperFactory.wrapLendOffer(order);
 
         await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
 
-        const tx = await this.debtOrderWrapperFactory.wrapLendOffer(order).repay(
+        const repayTx = await wrappedOffer.repay(
             amount.rawAmount,
             { nonce: transactions.getNextNonce() },
         );
 
         this.logger.info(`Repaying loan with id ${lendOfferId}`);
-        this.logger.info(`tx hash: ${tx.hash}`);
+        this.logger.info(`tx hash: ${repayTx.hash}`);
 
         transactions.add({
             name: 'repayLoan',
-            transactionObject: tx,
+            transactionObject: repayTx,
         });
+
+        if (amount.rawAmount.eq(constants.MaxUint256)) {
+            const returnTx = await wrappedOffer.returnCollateral({
+                nonce: transactions.getNextNonce(),
+                gasLimit: 104778,
+            });
+
+            this.logger.info(`Returning collateral for loan with id ${lendOfferId}`);
+            this.logger.info(`tx hash: ${returnTx.hash}`);
+
+            transactions.add({
+                name: 'returnCollateral',
+                transactionObject: returnTx,
+            });
+        }
 
         if (needAwaitMining) {
             await transactions.wait();
@@ -153,8 +169,6 @@ export class DharmaLendOffersService {
         const transactions = new TransactionLog();
         const rawOrder = await this.ordersFetcher.fetchOrder(lendOfferId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
-
-        await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
 
         const tx = await this.debtOrderWrapperFactory.wrapLendOffer(order).returnCollateral(
             { nonce: transactions.getNextNonce() },
