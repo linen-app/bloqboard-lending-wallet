@@ -8,6 +8,16 @@ import { stringify } from 'qs';
 import { Logger } from 'winston';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 
+export class OrdersFilter {
+    status?: Status;
+    principalTokenSymbol?: TokenSymbol;
+    collateralTokenSymbol?: TokenSymbol;
+    minUsdAmount?: number;
+    maxUsdAmount?: number;
+    debtor?: Address;
+    creditor?: Address;
+}
+
 @Injectable()
 export class DharmaOrdersFetcher {
     constructor(
@@ -25,30 +35,26 @@ export class DharmaOrdersFetcher {
         return response.data;
     }
 
-    async fetchOrders(
-        status: Status,
-        principalTokenSymbol?: TokenSymbol,
-        collateralTokenSymbol?: TokenSymbol,
-        minUsdAmount?: number,
-        maxUsdAmount?: number,
-    ): Promise<RelayerDebtOrder[]> {
+    async fetchOrders(filter: OrdersFilter): Promise<RelayerDebtOrder[]> {
         const debtsUrl = `${this.bloqboardUri}/Debts`;
         const kernelAddress = this.dharmaKernelAddress;
-        const pagination = {};
+        const pagination = {}; // TODO: add sorting & pagination
         const sorting = {};
 
-        const principalToken = principalTokenSymbol && this.tokenService.getTokenBySymbol(principalTokenSymbol);
-        const collateralToken = collateralTokenSymbol && this.tokenService.getTokenBySymbol(collateralTokenSymbol);
+        const principalToken = filter.principalTokenSymbol && this.tokenService.getTokenBySymbol(filter.principalTokenSymbol);
+        const collateralToken = filter.collateralTokenSymbol && this.tokenService.getTokenBySymbol(filter.collateralTokenSymbol);
 
-        const filter = {
+        const queryStringFilter = {
             principalTokenAddresses: principalToken && [principalToken.address],
             collateralTokenAddresses: collateralToken && [collateralToken.address],
-            amountFrom: minUsdAmount,
-            amountTo: maxUsdAmount,
+            amountFrom: filter.minUsdAmount,
+            amountTo: filter.maxUsdAmount,
+            debtorAddress: filter.debtor,
+            creditorAddress: filter.creditor,
         };
 
         const params = {
-            status, ...pagination, kernelAddress, ...sorting, ...filter,
+            status: filter.status, ...pagination, kernelAddress, ...sorting, ...queryStringFilter,
         };
 
         const str = (parameters: any) => stringify(parameters, { allowDots: true, arrayFormat: 'repeat' });

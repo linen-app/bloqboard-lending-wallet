@@ -16,20 +16,27 @@ export class DharmaController {
         private readonly dharmaLendOffersService: DharmaLendOffersService,
     ) { }
 
-    @Get('debt-orders')
+    @Get('debt-requests')
     @ApiImplicitQuery({ name: 'principalToken', enum: supportedTokens, required: false })
     @ApiImplicitQuery({ name: 'collateralToken', enum: supportedTokens, required: false })
     @ApiImplicitQuery({ name: 'minUsdAmount', required: false })
     @ApiImplicitQuery({ name: 'maxUsdAmount', required: false })
-    async getDebtOrders(
+    async getDebtRequests(
         @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
         @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
         @Query('collateralToken') collateralToken: TokenSymbol,
         @Query('principalToken') principalToken: TokenSymbol,
     ): Promise<any> {
-        const debtOrders = await this.dharmaLoanRequestsService.getDebtOrders(principalToken, collateralToken, minUsdAmount, maxUsdAmount);
+        const debtRequests = await this.dharmaLoanRequestsService.getDebtOrders(principalToken, collateralToken, minUsdAmount, maxUsdAmount);
 
-        return debtOrders;
+        return debtRequests;
+    }
+
+    @Get('my-loaned-assets')
+    async getMyLoanedAssets(): Promise<any> {
+        const offers = await this.dharmaLoanRequestsService.getMyLoanedOrders();
+
+        return offers;
     }
 
     @Post('fill-debt-request/:debtRequestId')
@@ -55,6 +62,13 @@ export class DharmaController {
         @Query('principalToken') principalToken: TokenSymbol,
     ): Promise<any> {
         const offers = await this.dharmaLendOffersService.getLendOffers(principalToken, collateralToken, minUsdAmount, maxUsdAmount);
+
+        return offers;
+    }
+
+    @Get('my-borrowed-assets')
+    async getMyBorrowedAssets(): Promise<any> {
+        const offers = await this.dharmaLendOffersService.getMyBorrowedOrders();
 
         return offers;
     }

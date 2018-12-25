@@ -115,7 +115,7 @@ describe('DharmaService', () => {
         const res: any[] = await dharmaLendOffersService.getLendOffers(TokenSymbol.WETH, TokenSymbol.ZRX, 0, 5);
         expect(res.length).toBeGreaterThan(0);
 
-        const tx = await dharmaLendOffersService.fillLendOffer(res[0].id, false);
+        const tx = await dharmaLendOffersService.fillLendOffer(res[0].id, true);
         expect(tx.transactions.pop().transactionObject.hash).toBeTruthy();
     });
 
@@ -123,7 +123,7 @@ describe('DharmaService', () => {
         const res: any[] = await dharmaDebtRequestsService.getDebtOrders(TokenSymbol.WETH, TokenSymbol.ZRX, 0, 5);
         expect(res.length).toBeGreaterThan(0);
 
-        const tx = await dharmaDebtRequestsService.fillDebtRequest(res[0].id, false);
+        const tx = await dharmaDebtRequestsService.fillDebtRequest(res[0].id, true);
         expect(tx.transactions.pop().transactionObject.hash).toBeTruthy();
     });
 });

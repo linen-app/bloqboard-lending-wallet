@@ -12,9 +12,9 @@ import { Logger } from 'winston';
 import { RelayerDebtOrder, Status } from './models/RelayerDebtOrder';
 import { DharmaOrdersFetcher } from './DharmaOrdersFetcher';
 import { Price } from './models/Price';
-import { Address } from 'src/types';
+import { Address, INTEREST_RATE_SCALING_FACTOR_MULTIPLIER } from '../../src/types';
 import { DebtOrderWrapper } from './wrappers/DebtOrderWrapper';
-import { BigNumber } from 'ethers/utils';
+import { AmortizationUnit } from './models/UnpackedDebtOrderData';
 
 @Injectable()
 export class DharmaLendOffersService {
@@ -33,13 +33,13 @@ export class DharmaLendOffersService {
     async getLendOffers(
         principalTokenSymbol?: TokenSymbol, collateralTokenSymbol?: TokenSymbol, minUsdAmount?: number, maxUsdAmount?: number,
     ): Promise<any[]> {
-        const res = await this.ordersFetcher.fetchOrders(
-            Status.SignedByCreditor,
+        const res = await this.ordersFetcher.fetchOrders({
+            status: Status.SignedByCreditor,
             principalTokenSymbol,
             collateralTokenSymbol,
             minUsdAmount,
             maxUsdAmount,
-        );
+        });
 
         const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
             this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
@@ -47,10 +47,31 @@ export class DharmaLendOffersService {
                     id: relayerOrder.id,
                     principal: x.principal.toString(),
                     maxLtv: relayerOrder.maxLtv / 100,
-                    interestRate: x.interestRate.toNumber() / 100,
+                    interestRate: x.interestRate.toNumber() / INTEREST_RATE_SCALING_FACTOR_MULTIPLIER,
                     termLength: x.termLength.toNumber(),
-                    amortizationUnit: x.amortizationUnit,
+                    amortizationUnit: AmortizationUnit[x.amortizationUnit],
                     collateralTokenSymbol: x.collateral.token.symbol,
+                })),
+        ));
+
+        return humanReadableResponse;
+    }
+
+    async getMyBorrowedOrders(): Promise<any[]> {
+        const res = await this.ordersFetcher.fetchOrders({
+            status: Status.Filled,
+            debtor: this.wallet.address,
+        });
+
+        const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
+            this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
+                .then(x => ({
+                    id: relayerOrder.id,
+                    principal: x.principal.toString(),
+                    collateral: x.collateral.toString(),
+                    interestRate: x.interestRate.toNumber() / INTEREST_RATE_SCALING_FACTOR_MULTIPLIER,
+                    termLength: x.termLength.toNumber(),
+                    amortizationUnit: AmortizationUnit[x.amortizationUnit],
                 })),
         ));
 
