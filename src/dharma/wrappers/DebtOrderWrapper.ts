@@ -18,15 +18,15 @@ export class DebtOrderWrapper {
     wrapDebtOrder = (debtOrderData: DebtOrderData): WrappedDebtOrder =>
         new WrappedDebtOrder(
             this.dharmaKernel,
-            this.repaymentRouter,
-            this.collateralizer,
             debtOrderData,
         )
 
-    WrappedLendOffer = (debtOrderData: UnpackedDebtOrderData) =>
+    wrapLendOffer = (debtOrderData: UnpackedDebtOrderData) =>
         new WrappedLendOffer(
             this.ltvCreditorProxyContract,
             this.signer,
+            this.repaymentRouter,
+            this.collateralizer,
             debtOrderData,
         )
 }

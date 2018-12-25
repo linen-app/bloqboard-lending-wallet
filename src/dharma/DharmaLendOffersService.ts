@@ -100,15 +100,16 @@ export class DharmaLendOffersService {
         return transactions;
     }
 
-    async repayLendOffer(lendOfferId: string, rawAmount: BigNumber, needAwaitMining: boolean): Promise<TransactionLog> {
+    async repayLendOffer(lendOfferId: string, humanReadableAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const transactions = new TransactionLog();
         const rawOrder = await this.ordersFetcher.fetchOrder(lendOfferId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
+        const amount = TokenAmount.fromHumanReadable(humanReadableAmount, order.principal.token);
 
         await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
 
-        const tx = await this.debtOrderWrapperFactory.wrapDebtOrder(order).repay(
-            rawAmount,
+        const tx = await this.debtOrderWrapperFactory.wrapLendOffer(order).repay(
+            amount.rawAmount,
             { nonce: transactions.getNextNonce() },
         );
 
@@ -127,12 +128,30 @@ export class DharmaLendOffersService {
         return transactions;
     }
 
-    async returnCollateral(orderId: string, needAwaitMining: boolean): Promise<TransactionLog> {
+    async returnCollateral(lendOfferId: string, needAwaitMining: boolean): Promise<TransactionLog> {
         const transactions = new TransactionLog();
-        const rawOrder = await this.ordersFetcher.fetchOrder(orderId);
+        const rawOrder = await this.ordersFetcher.fetchOrder(lendOfferId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
 
-        return null;
+        await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
+
+        const tx = await this.debtOrderWrapperFactory.wrapLendOffer(order).returnCollateral(
+            { nonce: transactions.getNextNonce() },
+        );
+
+        this.logger.info(`Returning collateral for loan with id ${lendOfferId}`);
+        this.logger.info(`tx hash: ${tx.hash}`);
+
+        transactions.add({
+            name: 'returnCollateral',
+            transactionObject: tx,
+        });
+
+        if (needAwaitMining) {
+            await transactions.wait();
+        }
+
+        return transactions;
     }
 
     private calculateCollateral(
@@ -178,7 +197,7 @@ export class DharmaLendOffersService {
 
         const parsedOffer = await this.loanAdapter.fromRelayerDebtOrder(relayerLendOffer);
 
-        const result = this.debtOrderFactory.WrappedLendOffer(parsedOffer);
+        const result = this.debtOrderFactory.wrapLendOffer(parsedOffer);
 
         return result;
     }

@@ -69,4 +69,27 @@ export class DharmaController {
         const result = await this.dharmaLendOffersService.fillLendOffer(lendOfferId, needAwaitMining);
         return res.status(HttpStatus.CREATED).json(result);
     }
+
+    @Post('repay-lend-offer/:lendOfferId')
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
+    async repayLendOffer(
+        @Param('lendOfferId') lendOfferId: string,
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Query('amount', ParseNumberPipe) amount: number,
+        @Res() res,
+    ): Promise<any> {
+        const result = await this.dharmaLendOffersService.repayLendOffer(lendOfferId, amount, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
+    }
+
+    @Post('return-collateral/:lendOfferId')
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
+    async returnCollateral(
+        @Param('lendOfferId') lendOfferId: string,
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Res() res,
+    ): Promise<any> {
+        const result = await this.dharmaLendOffersService.returnCollateral(lendOfferId, needAwaitMining);
+        return res.status(HttpStatus.CREATED).json(result);
+    }
 }

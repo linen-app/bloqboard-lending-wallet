@@ -45,6 +45,8 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
     constructor(
         private readonly ltvCreditorProxyContract: Contract,
         private readonly signer: MessageSigner,
+        private readonly repaymentRouter: Contract,
+        private readonly collateralizer: Contract,
         private readonly data: UnpackedDebtOrderData,
     ) {
         super(data);
@@ -257,6 +259,23 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         const ltv = principalValue.mul(10 ** PRECISION).div(collateralValue);
 
         return ltv.lte(this.data.maxLtv * (10 ** PRECISION));
+    }
+
+    repay(amount: BigNumber, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+        // TODO: determine collateral automatically
+        return this.repaymentRouter.repay(
+            this.getIssuanceCommitmentHash(),
+            amount.toString(),
+            this.debtOrderData.principal.token.address,
+            txOpts,
+        );
+    }
+
+    returnCollateral(txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+        return this.collateralizer.returnCollateral(
+            this.getIssuanceCommitmentHash(),
+            txOpts,
+        );
     }
 }
 
