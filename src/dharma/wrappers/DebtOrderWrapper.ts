@@ -1,4 +1,4 @@
-import { Contract } from 'ethers';
+import { Contract, Wallet } from 'ethers';
 import { DebtOrderData } from '../models/DebtOrderData';
 import { Inject, Injectable } from '@nestjs/common';
 import { WrappedDebtOrder } from './WrappedDebtOrder';
@@ -12,6 +12,7 @@ export class DebtOrderWrapper {
         @Inject('repayment-router-contract') private readonly repaymentRouter: Contract,
         @Inject('collateralizer-contract') private readonly collateralizer: Contract,
         @Inject('ltv-creditor-proxy-contract') private readonly ltvCreditorProxyContract: Contract,
+        @Inject('wallet') private readonly wallet: Wallet,
         private readonly signer: MessageSigner,
     ) { }
 
@@ -27,6 +28,7 @@ export class DebtOrderWrapper {
             this.signer,
             this.repaymentRouter,
             this.collateralizer,
+            this.wallet,
             debtOrderData,
         )
 }

@@ -47,16 +47,6 @@ export abstract class WrappedDebtOrderBase {
     }
 
     /**
-     * Returns the debt agreement's unique identifier --
-     * an alias for the issuance commitment hash cast to a BigNumber
-     *
-     * @return Debt agreement id.
-     */
-    protected getDebtAgreementId(): BigNumber {
-        return new BigNumber(this.getHash());
-    }
-
-    /**
      * Returns the payload that a debtor must sign in order to
      * indicate her consent to the parameters of the debt order --
      * which is, currently, the debt order's hash.

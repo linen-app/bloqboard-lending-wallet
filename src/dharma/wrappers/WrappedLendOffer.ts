@@ -1,8 +1,9 @@
 // External libraries
-import { Contract } from 'ethers';
+import { Contract, constants, Wallet } from 'ethers';
 import * as singleLineString from 'single-line-string';
-import { TransactionResponse, TransactionRequest } from 'ethers/providers';
+import { TransactionResponse, TransactionRequest, Provider } from 'ethers/providers';
 import { BigNumber } from 'ethers/utils';
+import * as ContractArtifacts from 'dharma-contract-artifacts';
 // Artifacts
 
 import { ECDSASignature } from '../models/ECDSASignature';
@@ -47,6 +48,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         private readonly signer: MessageSigner,
         private readonly repaymentRouter: Contract,
         private readonly collateralizer: Contract,
+        private readonly wallet: Wallet,
         private readonly data: UnpackedDebtOrderData,
     ) {
         super(data);
@@ -60,7 +62,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         return this.data.principal;
     }
 
-    public isSignedByCreditor(): boolean {
+    isSignedByCreditor(): boolean {
         // TODO: check validity of signature
         if (this.data.creditorSignature) {
             return true;
@@ -69,7 +71,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         return false;
     }
 
-    public setPrincipalPrice(principalPrice: Price) {
+    setPrincipalPrice(principalPrice: Price) {
         if (!equals(principalPrice.tokenAddress.toLowerCase(), this.data.principal.token.address.toLowerCase())) {
             throw new Error(
                 MAX_LTV_LOAN_OFFER_ERRORS.PRICE_OF_INCORRECT_TOKEN(
@@ -84,7 +86,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         this.principalPrice = principalPrice;
     }
 
-    public setCollateralPrice(collateralPrice: Price) {
+    setCollateralPrice(collateralPrice: Price) {
         if (!equals(collateralPrice.tokenAddress.toLowerCase(), this.data.collateral.token.address.toLowerCase())) {
             throw new Error(
                 MAX_LTV_LOAN_OFFER_ERRORS.PRICE_OF_INCORRECT_TOKEN(
@@ -99,7 +101,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         this.collateralPrice = collateralPrice;
     }
 
-    public setCollateralAmount(collateralAmount: BigNumber) {
+    setCollateralAmount(collateralAmount: BigNumber) {
         if (
             this.principalPrice &&
             this.collateralPrice &&
@@ -119,7 +121,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         this.data.termsContractParameters = this.updateTermsContractParameters(collateralAmount);
     }
 
-    public async signAsDebtor(debtorAddress: string, addPrefix: boolean = true): Promise<void> {
+    async signAsDebtor(debtorAddress: string, addPrefix: boolean = true): Promise<void> {
 
         if (!this.isSignedByCreditor()) {
             throw new Error(
@@ -162,7 +164,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         );
     }
 
-    public isSignedByDebtor(): boolean {
+    isSignedByDebtor(): boolean {
         // TODO: check validity of signature
         if (this.debtorSignature) {
             return true;
@@ -171,7 +173,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         return false;
     }
 
-    public async acceptAsDebtor(debtorAddress: string, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+    async acceptAsDebtor(debtorAddress: string, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
         if (this.data.debtor === undefined && debtorAddress === undefined) {
             throw new Error(MAX_LTV_LOAN_OFFER_ERRORS.DEBTOR_NOT_SET());
         }
@@ -238,10 +240,50 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         return await this.ltvCreditorProxyContract.fillDebtOffer(lTVParams, txOpts);
     }
 
+    async repay(amount: BigNumber, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+
+        if (amount.eq(constants.MaxUint256)) {
+            amount = await this.getOutstandingRepaymentAmount();
+        }
+
+        return this.repaymentRouter.repay(
+            this.getIssuanceCommitmentHash(),
+            amount.toString(),
+            this.debtOrderData.principal.token.address,
+            txOpts,
+        );
+    }
+
+    async getOutstandingRepaymentAmount() {
+        const agreementId = this.getIssuanceCommitmentHash();
+        const termsContract = new Contract(
+            this.data.termsContract,
+            ContractArtifacts.latest.SimpleInterestTermsContract,
+            this.wallet.provider,
+        );
+        const repaymentToDate: BigNumber = await termsContract.getValueRepaidToDate(agreementId);
+
+        const termEnd: BigNumber = await termsContract.getTermEndTimestamp(agreementId);
+
+        const expectedTotalRepayment: BigNumber = await termsContract.getExpectedRepaymentValue(
+            agreementId,
+            termEnd,
+        );
+
+        return expectedTotalRepayment.sub(repaymentToDate);
+    }
+
+    returnCollateral(txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
+        return this.collateralizer.returnCollateral(
+            this.getIssuanceCommitmentHash(),
+            txOpts,
+        );
+    }
+
     private updateTermsContractParameters(collateralAmount: BigNumber): string {
         const encodedCollateralAmount = collateralAmount.toHexString().substring(2).padStart(23, '0');
 
-        const result = this.data.termsContractParameters.substr(0, 39 + 2 ) + // +2 is for  collateralTokenIndex
+        const result = this.data.termsContractParameters.substr(0, 39 + 2) + // +2 is for  collateralTokenIndex
             encodedCollateralAmount +
             this.data.termsContractParameters.substr(39 + 2, 2);
 
@@ -259,23 +301,6 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         const ltv = principalValue.mul(10 ** PRECISION).div(collateralValue);
 
         return ltv.lte(this.data.maxLtv * (10 ** PRECISION));
-    }
-
-    repay(amount: BigNumber, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
-        // TODO: determine collateral automatically
-        return this.repaymentRouter.repay(
-            this.getIssuanceCommitmentHash(),
-            amount.toString(),
-            this.debtOrderData.principal.token.address,
-            txOpts,
-        );
-    }
-
-    returnCollateral(txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
-        return this.collateralizer.returnCollateral(
-            this.getIssuanceCommitmentHash(),
-            txOpts,
-        );
     }
 }
 
