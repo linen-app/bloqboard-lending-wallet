@@ -1,6 +1,5 @@
 import { Get, Controller, Post, Query, Res, HttpStatus } from '@nestjs/common';
 import { CompoundService } from './compound.service';
-import { TokenService } from '../tokens/TokenService';
 import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { utils } from 'ethers';
@@ -14,20 +13,7 @@ const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, Token
 export class CompoundController {
     constructor(
         private readonly compoundService: CompoundService,
-        private readonly tokenService: TokenService,
     ) { }
-
-    @Get('token-balance')
-    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false })
-    async tokenBalance(@Query('token') token: TokenSymbol): Promise<any> {
-        const tokens = token ? [token] : supportedTokens;
-        const result = {};
-        for (const t of tokens) {
-            const rawBalance = await this.tokenService.getTokenBalance(t);
-            result[t] = rawBalance.humanReadableAmount;
-        }
-        return result;
-    }
 
     @Get('supply-balance')
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false })

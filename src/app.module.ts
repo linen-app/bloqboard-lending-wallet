@@ -27,6 +27,7 @@ import { DharmaLendOffersService } from './dharma/DharmaLendOffersService';
 import { TokenMetadata } from './tokens/TokenMetadata';
 import { DebtOrderWrapper } from './dharma/wrappers/DebtOrderWrapper';
 import { MessageSigner } from './dharma/MessageSigner';
+import { TokensController } from './tokens/TokensController';
 
 const NETWORK = process.env.NETWORK || 'kovan';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -90,7 +91,7 @@ const collateralizedContract = new ethers.Contract(
             ],
         }),
     ],
-    controllers: [CompoundController, KyberController, DharmaController],
+    controllers: [CompoundController, KyberController, DharmaController, TokensController],
     providers: [
         CompoundService,
         KyberService,

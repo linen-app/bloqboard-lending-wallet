@@ -19,8 +19,8 @@ export class DharmaController {
     @Get('debt-requests')
     @ApiImplicitQuery({ name: 'principalToken', enum: supportedTokens, required: false })
     @ApiImplicitQuery({ name: 'collateralToken', enum: supportedTokens, required: false })
-    @ApiImplicitQuery({ name: 'minUsdAmount', required: false })
-    @ApiImplicitQuery({ name: 'maxUsdAmount', required: false })
+    @ApiImplicitQuery({ name: 'minUsdAmount'})
+    @ApiImplicitQuery({ name: 'maxUsdAmount'})
     async getDebtRequests(
         @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
         @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
@@ -53,8 +53,8 @@ export class DharmaController {
     @Get('lend-offers')
     @ApiImplicitQuery({ name: 'principalToken', enum: supportedTokens, required: false })
     @ApiImplicitQuery({ name: 'collateralToken', enum: supportedTokens, required: false })
-    @ApiImplicitQuery({ name: 'minUsdAmount', required: false })
-    @ApiImplicitQuery({ name: 'maxUsdAmount', required: false })
+    @ApiImplicitQuery({ name: 'minUsdAmount'})
+    @ApiImplicitQuery({ name: 'maxUsdAmount'})
     async getLendOffers(
         @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
         @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
