@@ -11,12 +11,6 @@ import { Address, equals } from '../../types';
 import { UnpackedDebtOrderData } from '../models/UnpackedDebtOrderData';
 import { WrappedDebtOrderBase } from './WrappedDebtOrderBase';
 import { MessageSigner } from '../MessageSigner';
-import { TokenAmount } from '../../tokens/TokenAmount';
-import {
-    CollateralizedContractTerms,
-    SimpleInterestContractTerms,
-    CollateralizedSimpleInterestTermsParameters,
-} from '../ltv-creditor-proxy-wrapper/TermsContractParameters';
 
 const MAX_LTV_LOAN_OFFER_ERRORS = {
     IS_NOT_SIGNED_BY_CREDITOR: () => `The creditor has not signed the loan offer.`,
@@ -45,10 +39,8 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
 
     private collateralAmount?: BigNumber;
     private collateralPrice?: Price;
-    private debtor?: Address;
     private debtorSignature?: ECDSASignature;
     private principalPrice?: Price;
-    private termsContractParameters?: string;
 
     constructor(
         private readonly ltvCreditorProxyContract: Contract,
@@ -122,7 +114,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         this.collateralAmount = collateralAmount;
 
         // calculate the terms contract parameters, since the collateral amount has been set
-        this.termsContractParameters = this.getTermsContractParameters();
+        this.data.termsContractParameters = this.updateTermsContractParameters(collateralAmount);
     }
 
     public async signAsDebtor(debtorAddress: string, addPrefix: boolean = true): Promise<void> {
@@ -158,7 +150,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
             );
         }
 
-        this.debtor = debtorAddress;
+        this.data.debtor = debtorAddress;
 
         const debtorCommitmentHash = this.getDebtorCommitmentHash();
 
@@ -178,12 +170,12 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
     }
 
     public async acceptAsDebtor(debtorAddress: string, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
-        if (this.debtor === undefined && debtorAddress === undefined) {
+        if (this.data.debtor === undefined && debtorAddress === undefined) {
             throw new Error(MAX_LTV_LOAN_OFFER_ERRORS.DEBTOR_NOT_SET());
         }
 
-        if (this.debtor && debtorAddress && this.debtor !== debtorAddress) {
-            throw new Error(MAX_LTV_LOAN_OFFER_ERRORS.INCORRECT_DEBTOR(debtorAddress, this.debtor));
+        if (this.data.debtor && debtorAddress && this.data.debtor !== debtorAddress) {
+            throw new Error(MAX_LTV_LOAN_OFFER_ERRORS.INCORRECT_DEBTOR(debtorAddress, this.data.debtor));
         }
 
         if (!this.principalPrice || !this.collateralPrice) {
@@ -202,38 +194,38 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
                 ),
             );
         }
-        const debtor = this.debtor || debtorAddress;
+        const debtor = this.data.debtor || debtorAddress;
 
         const lTVParams: LTVParams = {
             order: {
                 creditor: this.data.creditor,
                 principalToken: this.data.principal.token.address,
-                principalAmount: this.data.principal.rawAmount.toString(),
-                collateralAmount: this.collateralAmount.toString(),
+                principalAmount: this.data.principal.rawAmount,
+                collateralAmount: this.collateralAmount,
                 collateralToken: this.data.collateral.token.address,
                 debtor,
-                debtorFee: this.data.debtorFee.rawAmount.toString(),
+                debtorFee: this.data.debtorFee.rawAmount,
                 relayer: this.data.relayer,
-                relayerFee: this.data.relayerFee.rawAmount.toString(),
-                underwriterFee: this.data.underwriterFee.rawAmount.toString(),
+                relayerFee: this.data.relayerFee.rawAmount,
+                underwriterFee: this.data.underwriterFee.rawAmount,
                 debtorSignature: this.debtorSignature || ECDSASignature.NULL_SIGNATURE,
                 underwriterSignature: ECDSASignature.NULL_SIGNATURE,
                 creditorSignature: this.data.creditorSignature,
                 issuanceVersion: this.data.issuanceVersion,
                 kernelVersion: this.data.kernelVersion,
-                creditorFee: this.data.creditorFee.rawAmount.toString(),
+                creditorFee: this.data.creditorFee.rawAmount,
                 underwriter: this.data.underwriter,
-                underwriterRiskRating: this.data.underwriterRiskRating.toString(),
+                underwriterRiskRating: this.data.underwriterRiskRating,
                 termsContract: this.data.termsContract,
-                termsContractParameters: this.termsContractParameters,
-                expirationTimestampInSec: this.data.expirationTimestampInSec.toString(),
-                salt: this.data.salt.toString(),
+                termsContractParameters: this.data.termsContractParameters,
+                expirationTimestampInSec: this.data.expirationTimestampInSec,
+                salt: this.data.salt,
             },
             collateralPrice: this.collateralPrice,
             principalPrice: this.principalPrice,
             creditorCommitment: {
                 values: {
-                    maxLTV: this.data.maxLtv,
+                    maxLTV: new BigNumber(this.data.maxLtv),
                     priceFeedOperator: this.data.priceProvider,
                 },
                 signature: this.data.creditorSignature,
@@ -244,36 +236,14 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
         return await this.ltvCreditorProxyContract.fillDebtOffer(lTVParams, txOpts);
     }
 
-    private getTermsContractParameters(): string {
-        const MAX_INTEREST_RATE_PRECISION = 4;
-        const FIXED_POINT_SCALING_FACTOR = 10 ** MAX_INTEREST_RATE_PRECISION;
+    private updateTermsContractParameters(collateralAmount: BigNumber): string {
+        const encodedCollateralAmount = collateralAmount.toHexString().substring(2).padStart(23, '0');
 
-        const collateral = new TokenAmount(
-            this.collateralAmount,
-            this.data.collateral.token,
-        );
+        const result = this.data.termsContractParameters.substr(0, 39 + 2 ) + // +2 is for  collateralTokenIndex
+            encodedCollateralAmount +
+            this.data.termsContractParameters.substr(39 + 2, 2);
 
-        // Pack terms contract parameters
-        const collateralizedContractTerms: CollateralizedContractTerms = {
-            collateralAmount: collateral.rawAmount.toString(),
-            collateralTokenIndex: this.data.collateralTokenIndex.toNumber(),
-            gracePeriodInDays: 0,
-        };
-
-        const simpleInterestContractTerms: SimpleInterestContractTerms = {
-            principalTokenIndex: this.data.principalTokenIndex.toNumber(),
-            principalAmount: this.data.principal.rawAmount.toString(),
-            interestRateFixedPoint: this.data.interestRate
-                .mul(FIXED_POINT_SCALING_FACTOR)
-                .toNumber(),
-            amortizationUnitType: this.data.amortizationUnit,
-            termLengthUnits: this.data.termLength.toNumber(),
-        };
-
-        return CollateralizedSimpleInterestTermsParameters.pack(
-            collateralizedContractTerms,
-            simpleInterestContractTerms,
-        );
+        return result;
     }
 
     private collateralAmountIsSufficient(collateralAmount: BigNumber): boolean {
@@ -286,17 +256,17 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
 
         const ltv = principalValue.mul(10 ** PRECISION).div(collateralValue);
 
-        return ltv.lte(this.data.maxLtv.mul(10 ** PRECISION));
+        return ltv.lte(this.data.maxLtv * (10 ** PRECISION));
     }
 }
 
 interface LTVParams {
-    creditor: string;
+    creditor: Address;
 
     creditorCommitment: {
         values: {
             maxLTV: BigNumber;
-            priceFeedOperator: string;
+            priceFeedOperator: Address;
         };
         signature: ECDSASignature;
     };
@@ -305,25 +275,25 @@ interface LTVParams {
     collateralPrice: Price;
 
     order: {
-        kernelVersion: string;
-        issuanceVersion: string;
-        principalAmount: string;
-        principalToken: string;
-        collateralAmount: string;
-        collateralToken: string;
-        debtor: string;
-        debtorFee: string;
-        creditor: string;
-        creditorFee: string;
-        relayer: string;
-        relayerFee: string;
-        underwriter: string;
-        underwriterFee: string;
-        underwriterRiskRating: string;
-        termsContract: string;
+        kernelVersion: Address;
+        issuanceVersion: Address;
+        principalAmount: BigNumber;
+        principalToken: Address;
+        collateralAmount: BigNumber;
+        collateralToken: Address;
+        debtor: Address;
+        debtorFee: BigNumber;
+        creditor: Address;
+        creditorFee: BigNumber;
+        relayer: Address;
+        relayerFee: BigNumber;
+        underwriter: Address;
+        underwriterFee: BigNumber;
+        underwriterRiskRating: BigNumber;
+        termsContract: Address;
         termsContractParameters: string;
-        expirationTimestampInSec: string;
-        salt: string;
+        expirationTimestampInSec: BigNumber;
+        salt: BigNumber;
         debtorSignature: ECDSASignature;
         creditorSignature: ECDSASignature;
         underwriterSignature: ECDSASignature;

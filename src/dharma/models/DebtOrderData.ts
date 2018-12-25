@@ -26,6 +26,6 @@ export interface DebtOrderData {
     underwriterSignature: ECDSASignature;
 
     // Lend Offer fields
-    maxLtv: BigNumber;
+    maxLtv: number;
     priceProvider: Address;
 }

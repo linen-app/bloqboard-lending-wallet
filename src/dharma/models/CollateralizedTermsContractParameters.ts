@@ -12,9 +12,6 @@ export interface CollateralizedTermsContractParameters {
     collateralAmount: BigNumber;
 }
 
-const MAX_INTEREST_RATE_PRECISION = 4;
-const FIXED_POINT_SCALING_FACTOR = 10 ** MAX_INTEREST_RATE_PRECISION;
-
 export function unpackParameters(
     packedParams: string,
 ): CollateralizedTermsContractParameters {
@@ -29,11 +26,6 @@ export function unpackParameters(
     const collateralAmountHex = `0x${packedParams.substr(41, 23)}`;
     const gracePeriodInDaysHex = `0x${packedParams.substr(64, 2)}`;
 
-    // Given that our fixed point representation of the interest rate
-    // is scaled up by our chosen scaling factor, we scale it down
-    // for computations.
-    const interestRate = new BigNumber(interestRateFixedPointHex).div(FIXED_POINT_SCALING_FACTOR);
-
     // Since the amortization unit type is stored in 1 byte, it can't exceed
     // a value of 255.  As such, we're not concerned about using BigNumber's
     // to represent amortization units.
@@ -43,7 +35,7 @@ export function unpackParameters(
     return {
         principalTokenIndex: new BigNumber(principalTokenIndexHex),
         principalAmount: new BigNumber(principalAmountHex),
-        interestRate,
+        interestRate: new BigNumber(interestRateFixedPointHex),
         termLength: new BigNumber(termLengthHex),
         amortizationUnit,
 

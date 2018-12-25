@@ -56,7 +56,7 @@ export class CollateralizedSimpleInterestLoanAdapter {
             principalTokenIndex: params.principalTokenIndex,
             collateralTokenIndex: params.collateralTokenIndex,
 
-            maxLtv: order.maxLtv && new BigNumber(order.maxLtv),
+            maxLtv: order.maxLtv,
             priceProvider: order.signerAddress,
         };
 
