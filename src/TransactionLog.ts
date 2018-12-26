@@ -1,11 +1,70 @@
+import { ApiModelProperty } from '@nestjs/swagger';
+import { BigNumber } from 'ethers/utils';
 import { ContractTransaction } from 'ethers';
 
-export interface TransactionLogEntry {
+export class TransactionResponse {
+    @ApiModelProperty()
+    hash?: string;
+
+    @ApiModelProperty()
+    to?: string;
+
+    @ApiModelProperty()
+    from: string;
+
+    @ApiModelProperty()
+    nonce: number;
+
+    @ApiModelProperty()
+    gasLimit: BigNumber;
+
+    @ApiModelProperty()
+    gasPrice: BigNumber;
+
+    @ApiModelProperty()
+    data: string;
+
+    @ApiModelProperty()
+    value: BigNumber;
+
+    @ApiModelProperty()
+    chainId: number;
+
+    @ApiModelProperty()
+    r?: string;
+
+    @ApiModelProperty()
+    s?: string;
+
+    @ApiModelProperty()
+    v?: number;
+
+    @ApiModelProperty()
+    blockNumber?: number;
+
+    @ApiModelProperty()
+    blockHash?: string;
+
+    @ApiModelProperty()
+    timestamp?: number;
+
+    @ApiModelProperty()
+    confirmations: number;
+
+    @ApiModelProperty()
+    raw?: string;
+}
+
+export class TransactionLogEntry {
+    @ApiModelProperty()
     name: string;
+
+    @ApiModelProperty({type: TransactionResponse})
     transactionObject: ContractTransaction;
 }
 
 export class TransactionLog {
+    @ApiModelProperty({ isArray: true, type: TransactionLogEntry })
     public readonly transactions: TransactionLogEntry[] = [];
 
     constructor(txs?: TransactionLogEntry[]) {

@@ -1,0 +1,1 @@
+export const NEED_AWAIT_MINING = 'Wait till all transactions will be mined in some block or return transaction data immideatley?';
