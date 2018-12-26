@@ -1,7 +1,8 @@
-import { Get, Controller, Query, HttpStatus } from '@nestjs/common';
+import { Get, Controller, Query } from '@nestjs/common';
 import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TokenService } from './TokenService';
 import { TokenSymbol } from './TokenSymbol';
+import * as Text from '../../resources/ConstantText';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
@@ -13,12 +14,12 @@ export class TokensController {
     ) { }
 
     @Get('balance')
-    @ApiOperation({ title: 'returns token balance of the current account' })
+    @ApiOperation({ title: 'Return token balance of the current account' })
     @ApiImplicitQuery({
         name: 'token',
         enum: supportedTokens,
         required: false,
-        description: 'if a token is not specified, endpoint returns balances of all supported tokens',
+        description: Text.SUPPORTED_TOKEND,
     })
     async tokenBalance(@Query('token') token: TokenSymbol): Promise<any> {
         const tokens = token ? [token] : supportedTokens;

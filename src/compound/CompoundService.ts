@@ -3,7 +3,7 @@ import { Logger } from 'winston';
 import { Contract, Wallet, ContractTransaction, ethers } from 'ethers';
 import { TokenService } from '../tokens/TokenService';
 import { TransactionLog } from '../TransactionLog';
-import { KyberService } from '../kyber/kyber.service';
+import { KyberService } from '../kyber/KyberService';
 import { BigNumber } from 'ethers/utils';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TokenAmount } from '../tokens/TokenAmount';
