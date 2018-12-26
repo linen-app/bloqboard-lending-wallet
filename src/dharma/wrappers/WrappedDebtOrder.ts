@@ -22,7 +22,7 @@ export class WrappedDebtOrder extends WrappedDebtOrderBase {
             this.getSignaturesV(),
             this.getSignaturesR(),
             this.getSignaturesS(),
-            txOpts,
+            { ...txOpts, gasLimit: 600000 },
         );
     }
 }

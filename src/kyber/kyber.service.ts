@@ -41,7 +41,7 @@ export class KyberService {
             amountToSell.rawAmount,
             tokenToBuy.address,
             slippageRate,
-            { nonce: transactions.getNextNonce() },
+            { nonce: transactions.getNextNonce(), gasLimit: 450000 },
         );
 
         transactions.add({
@@ -101,7 +101,7 @@ export class KyberService {
             amountToBuy.rawAmount,
             rate,
             ethers.constants.AddressZero,
-            { nonce: transactions.getNextNonce() },
+            { nonce: transactions.getNextNonce(), gasLimit: 450000 },
         );
 
         transactions.add({

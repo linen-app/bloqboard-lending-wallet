@@ -146,7 +146,6 @@ export class DharmaLendOffersService {
         if (amount.rawAmount.eq(constants.MaxUint256)) {
             const returnTx = await wrappedOffer.returnCollateral({
                 nonce: transactions.getNextNonce(),
-                gasLimit: 104778,
             });
 
             this.logger.info(`Returning collateral for loan with id ${lendOfferId}`);

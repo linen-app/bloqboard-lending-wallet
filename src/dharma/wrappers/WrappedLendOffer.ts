@@ -237,7 +237,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
             creditor: this.data.creditor,
         };
 
-        return await this.ltvCreditorProxyContract.fillDebtOffer(lTVParams, txOpts);
+        return await this.ltvCreditorProxyContract.fillDebtOffer(lTVParams, { ...txOpts, gasLimit: 1000000 });
     }
 
     async repay(amount: BigNumber, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
@@ -250,7 +250,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
             this.getIssuanceCommitmentHash(),
             amount.toString(),
             this.debtOrderData.principal.token.address,
-            txOpts,
+            { ...txOpts, gasLimit: 150000 },
         );
     }
 
@@ -276,7 +276,7 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
     returnCollateral(txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
         return this.collateralizer.returnCollateral(
             this.getIssuanceCommitmentHash(),
-            txOpts,
+            { ...txOpts, gasLimit: 150000 } ,
         );
     }
 
