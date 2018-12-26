@@ -6,6 +6,7 @@ import { TransactionLog } from '../TransactionLog';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TokenMetadata } from '../tokens/TokenMetadata';
 import { TokenAmount } from '../tokens/TokenAmount';
+import { BigNumber } from 'ethers/utils';
 
 const PRECISION = ethers.constants.WeiPerEther;
 
@@ -116,6 +117,21 @@ export class KyberService {
         }
 
         return transactions;
+    }
+
+    async getSlippageRate(amountToSellHumanReadable: number, symbolToSell: TokenSymbol, symbolToBuy: TokenSymbol): Promise<number> {
+        const tokenToSell = this.tokenService.getTokenBySymbol(symbolToSell);
+        const tokenToBuy = this.tokenService.getTokenBySymbol(symbolToBuy);
+        const amountToSell = TokenAmount.fromHumanReadable(amountToSellHumanReadable, tokenToSell);
+
+        const response = await this.kyberContract.getExpectedRate(
+            amountToSell.token.address,
+            tokenToBuy.address,
+            amountToSell.rawAmount,
+        );
+        const rate: BigNumber = response.slippageRate;
+        const formattedRate = rate.mul(amountToSell.rawAmount).div(new BigNumber(10).pow(32)).toNumber() / 10000;
+        return formattedRate;
     }
 
     private async calcApproximateAmountToSell(
