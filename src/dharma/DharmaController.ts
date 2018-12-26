@@ -66,12 +66,13 @@ export class DharmaController {
         return offers;
     }
 
-    @Get('my-borrowed-assets')
-    async getMyBorrowedAssets(): Promise<any> {
-        const offers = await this.dharmaLendOffersService.getMyBorrowedOrders();
+    // TODO: creditor is a smart contract
+    // @Get('my-borrowed-assets')
+    // async getMyBorrowedAssets(): Promise<any> {
+    //     const offers = await this.dharmaLendOffersService.getMyBorrowedOrders();
 
-        return offers;
-    }
+    //     return offers;
+    // }
 
     @Post('fill-lend-offer/:lendOfferId')
     @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
