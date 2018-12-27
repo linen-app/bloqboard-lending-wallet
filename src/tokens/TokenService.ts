@@ -58,7 +58,10 @@ export class TokenService {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const tx: ContractTransaction = await contract.approve(spender, ethers.constants.MaxUint256, { nonce });
+        const tx: ContractTransaction = await contract.approve(spender, 
+            ethers.constants.MaxUint256,
+            { nonce, gasLimit: 50000 }
+        );
 
         this.logger.info(`Unlocking ${symbol} for spender: ${spender}`);
 
@@ -69,7 +72,7 @@ export class TokenService {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const tx: ContractTransaction = await contract.approve(spender, 0);
+        const tx: ContractTransaction = await contract.approve(spender, 0, { gasLimit: 50000 });
 
         this.logger.info(`Locking ${symbol} for spender: ${spender}`);
 
