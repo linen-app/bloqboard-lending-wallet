@@ -243,7 +243,6 @@ export class DharmaLendOffersService {
         };
     }
 
-    // TODO: TEST THIS THROUGHLY
     private async convertLendOfferToProxyInstance(relayerLendOffer: RelayerDebtOrder) {
         if (relayerLendOffer.maxLtv === undefined) {
             this.logger.error(`maxLtv is undefined in lend offer: ${JSON.stringify(relayerLendOffer)}`);

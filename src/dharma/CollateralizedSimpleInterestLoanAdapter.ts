@@ -42,7 +42,7 @@ export class CollateralizedSimpleInterestLoanAdapter {
             relayer: order.relayerAddress,
             relayerFee: new TokenAmount(order.relayerFee, principalToken),
             underwriter: order.underwriterAddress,
-            underwriterRiskRating: new BigNumber(order.underwriterRiskRating), // TODO: convert to float
+            underwriterRiskRating: new BigNumber(order.underwriterRiskRating),
             underwriterFee: new TokenAmount(order.underwriterFee, principalToken),
             underwriterSignature: this.parseSignature(order.underwriterSignature),
             creditor: order.creditorAddress,
