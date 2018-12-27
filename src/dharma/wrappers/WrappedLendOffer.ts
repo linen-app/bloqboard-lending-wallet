@@ -241,14 +241,9 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
     }
 
     async repay(amount: BigNumber, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
-
-        if (amount.eq(constants.MaxUint256)) {
-            amount = await this.getOutstandingRepaymentAmount();
-        }
-
         return this.repaymentRouter.repay(
             this.getIssuanceCommitmentHash(),
-            amount.toString(),
+            amount,
             this.debtOrderData.principal.token.address,
             { ...txOpts, gasLimit: 150000 },
         );

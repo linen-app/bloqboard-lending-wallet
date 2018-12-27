@@ -97,8 +97,6 @@ export class DharmaLendOffersService {
         const rawOffer = await this.ordersFetcher.fetchOrder(offerId);
         const offer = await this.convertLendOfferToProxyInstance(rawOffer);
 
-        await this.tokenService.addUnlockTransactionIfNeeded(offer.collateralToken.symbol, this.tokenTransferProxyAddress, transactions);
-
         const principalPrice = await this.getSignedRate(offer.principal.token.symbol, 'USD');
         const collateralPrice = await this.getSignedRate(offer.collateralToken.symbol, 'USD');
 
@@ -111,6 +109,9 @@ export class DharmaLendOffersService {
         );
 
         this.logger.info(`Collateral amount: ${collateralAmount}`);
+
+        await this.tokenService.assertTokenBalance(collateralAmount);
+        await this.tokenService.addUnlockTransactionIfNeeded(offer.collateralToken.symbol, this.tokenTransferProxyAddress, transactions);
 
         offer.setPrincipalPrice(principalPrice);
         offer.setCollateralPrice(collateralPrice);
@@ -142,10 +143,15 @@ export class DharmaLendOffersService {
         const amount = TokenAmount.fromHumanReadable(humanReadableAmount, order.principal.token);
         const wrappedOffer = this.debtOrderWrapperFactory.wrapLendOffer(order);
 
-        await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
+        const actualAmount = amount.rawAmount.eq(constants.MaxUint256) ?
+            new TokenAmount(await wrappedOffer.getOutstandingRepaymentAmount(), amount.token) :
+            amount;
+
+        await this.tokenService.assertTokenBalance(actualAmount);
+        await this.tokenService.addUnlockTransactionIfNeeded(actualAmount.token.symbol, this.tokenTransferProxyAddress, transactions);
 
         const repayTx = await wrappedOffer.repay(
-            amount.rawAmount,
+            actualAmount.rawAmount,
             { nonce: transactions.getNextNonce() },
         );
 

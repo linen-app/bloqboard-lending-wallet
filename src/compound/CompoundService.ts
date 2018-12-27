@@ -41,6 +41,7 @@ export class CompoundService {
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
         const transactions = new TransactionLog();
 
+        await this.tokenService.assertTokenBalance(tokenAmount);
         await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
@@ -110,6 +111,7 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
 
+        await this.tokenService.assertTokenBalance(tokenAmount);
         await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const neededTokenAmount = tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ?

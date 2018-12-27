@@ -89,6 +89,7 @@ export class DharmaDebtRequestService {
         const rawOrder = await this.ordersFetcher.fetchOrder(requestId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
 
+        await this.tokenService.assertTokenBalance(order.principal);
         await this.tokenService.addUnlockTransactionIfNeeded(order.principal.token.symbol, this.tokenTransferProxyAddress, transactions);
 
         order.creditor = this.wallet.address;

@@ -1,10 +1,11 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HTTP_SERVER_REF } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { SmartContractInvariantViolationFilter } from './filters/SmartContractInvariantViolationFilter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  app.useGlobalFilters(new SmartContractInvariantViolationFilter(app.get(HTTP_SERVER_REF)));
   const options = new DocumentBuilder()
     .setTitle('Bloqboard Lending Wallet')
     .setDescription('Bloqboard Lending Wallet API description')
