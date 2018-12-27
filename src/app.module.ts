@@ -14,12 +14,12 @@ import * as Addresses from '../resources/dharma/addresses.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 
-import { CompoundController } from './compound/compound.controller';
+import { CompoundController } from './compound/CompoundController';
 import { DharmaController } from './dharma/DharmaController';
-import { CompoundService } from './compound/compound.service';
+import { CompoundService } from './compound/CompoundService';
 import { TokenService } from './tokens/TokenService';
-import { KyberService } from './kyber/kyber.service';
-import { KyberController } from './kyber/kyber.controller';
+import { KyberService } from './kyber/KyberService';
+import { KyberController } from './kyber/KyberController';
 import { DharmaDebtRequestService } from './dharma/DharmaDebtRequestService';
 import { CollateralizedSimpleInterestLoanAdapter } from './dharma/CollateralizedSimpleInterestLoanAdapter';
 import { DharmaOrdersFetcher } from './dharma/DharmaOrdersFetcher';

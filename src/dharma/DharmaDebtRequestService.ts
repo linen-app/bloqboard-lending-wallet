@@ -10,6 +10,7 @@ import { DharmaOrdersFetcher } from './DharmaOrdersFetcher';
 import { Status } from './models/RelayerDebtOrder';
 import { DebtOrderWrapper } from './wrappers/DebtOrderWrapper';
 import { AmortizationUnit } from './models/UnpackedDebtOrderData';
+import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
 
 @Injectable()
 export class DharmaDebtRequestService {
@@ -26,7 +27,7 @@ export class DharmaDebtRequestService {
 
     async getDebtOrders(
         principalTokenSymbol?: TokenSymbol, collateralTokenSymbol?: TokenSymbol, minUsdAmount?: number, maxUsdAmount?: number,
-    ): Promise<any[]> {
+    ): Promise<HumanReadableDebtRequest[]> {
         const res = await this.ordersFetcher.fetchOrders({
             status: Status.SignedByDebtor,
             principalTokenSymbol,
@@ -50,7 +51,7 @@ export class DharmaDebtRequestService {
         return humanReadableResponse;
     }
 
-    async getMyLoanedOrders(): Promise<any[]> {
+    async getMyLoanedOrders(): Promise<HumanReadableDebtRequest[]> {
         const res = await this.ordersFetcher.fetchOrders({
             status: Status.Filled,
             creditor: this.wallet.address,

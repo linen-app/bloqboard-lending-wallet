@@ -15,6 +15,8 @@ import { Price } from './models/Price';
 import { Address, INTEREST_RATE_SCALING_FACTOR_MULTIPLIER } from '../../src/types';
 import { DebtOrderWrapper } from './wrappers/DebtOrderWrapper';
 import { AmortizationUnit } from './models/UnpackedDebtOrderData';
+import { HumanReadableLendOffer } from './HumanReadableLendOffer';
+import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
 
 @Injectable()
 export class DharmaLendOffersService {
@@ -32,7 +34,7 @@ export class DharmaLendOffersService {
 
     async getLendOffers(
         principalTokenSymbol?: TokenSymbol, collateralTokenSymbol?: TokenSymbol, minUsdAmount?: number, maxUsdAmount?: number,
-    ): Promise<any[]> {
+    ): Promise<HumanReadableLendOffer[]> {
         const res = await this.ordersFetcher.fetchOrders({
             status: Status.SignedByCreditor,
             principalTokenSymbol,
@@ -57,7 +59,7 @@ export class DharmaLendOffersService {
         return humanReadableResponse;
     }
 
-    async getMyBorrowedOrders(): Promise<any[]> {
+    async getMyBorrowedOrders(): Promise<HumanReadableDebtRequest[]> {
         const res = await this.ordersFetcher.fetchOrders({
             status: Status.Filled,
             debtor: this.wallet.address,

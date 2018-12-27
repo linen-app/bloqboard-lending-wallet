@@ -1,10 +1,13 @@
 import { Get, Controller, Post, Query, Res, HttpStatus } from '@nestjs/common';
-import { CompoundService } from './compound.service';
-import { ApiImplicitQuery, ApiUseTags } from '@nestjs/swagger';
+import { CompoundService } from './CompoundService';
+import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { utils } from 'ethers';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { ParseNumberPipe } from '../parseNumber.pipe';
+import { TransactionLog } from '../TransactionLog';
+import { Balance } from '../HumanReadableBalance';
+import * as Text from '../../resources/ConstantText';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
@@ -16,7 +19,12 @@ export class CompoundController {
     ) { }
 
     @Get('supply-balance')
-    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false })
+    @ApiOperation({
+        title: 'Supply balance of the current account in Compound protocol',
+        description: 'Return supplied balance of the current account in the specified asset.',
+    })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false, description: Text.SUPPORTED_TOKEND })
+    @ApiResponse({ status: HttpStatus.OK, type: Balance })
     async supplyBalance(@Query('token') token: TokenSymbol): Promise<any> {
         const tokens = token ? [token] : supportedTokens;
         const result = {};
@@ -28,7 +36,12 @@ export class CompoundController {
     }
 
     @Get('borrow-balance')
-    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false })
+    @ApiOperation({
+        title: 'Outstanding debt of the current account to Compound protocol',
+        description: 'Return outstanding debt of the current account in the specified asset.',
+    })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false, description: Text.SUPPORTED_TOKEND })
+    @ApiResponse({ status: HttpStatus.OK, type: Balance })
     async borrowBalance(@Query('token') token: TokenSymbol): Promise<any> {
         const tokens = token ? [token] : supportedTokens;
         const result = {};
@@ -40,6 +53,12 @@ export class CompoundController {
     }
 
     @Get('account-liquidity')
+    @ApiOperation({
+        title: 'Account liquidity',
+        description: 'More info: https://compound.finance/developers#get-account-liquidity' +
+            '\nWARNING! Your collateral can be liquidated if your account liquidity drops below 0.',
+    })
+    @ApiResponse({ status: HttpStatus.OK, type: Balance })
     async accountLiquidity(): Promise<any> {
         const rawBalance = await this.compoundService.getAccountLiquidity();
         const amount = utils.formatEther(rawBalance);
@@ -47,7 +66,12 @@ export class CompoundController {
     }
 
     @Post('supply')
+    @ApiOperation({
+        title: 'Supply asset',
+        description: 'Supply principal as lender or collateral as borrower to Compound protocol.',
+    })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async supply(
         @Query('token') token: TokenSymbol,
         @Query('amount', ParseNumberPipe) amount: number,
@@ -59,7 +83,13 @@ export class CompoundController {
     }
 
     @Post('withdraw')
+    @ApiOperation({
+        title: 'Withdraw asset',
+        description: 'Withdraw principal as lender or return collateral as borrower from Compound protocol.' +
+            '\nWARNING! Your collateral can be liquidated if your account liquidity drops below 0.',
+    })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async withdraw(
         @Query('token') token: TokenSymbol,
         @Query('amount', ParseNumberPipe) amount: number,
@@ -71,7 +101,13 @@ export class CompoundController {
     }
 
     @Post('borrow')
+    @ApiOperation({
+        title: 'Borrow asset',
+        description: 'Borrow asset from Compound protocol. You need to have account liquidity to cover your debt. ' +
+            '\nWARNING! Your collateral can be liquidated if your account liquidity drops below 0.',
+    })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async borrow(
         @Query('token') token: TokenSymbol,
         @Query('amount', ParseNumberPipe) amount: number,
@@ -83,7 +119,12 @@ export class CompoundController {
     }
 
     @Post('repay-borrow')
+    @ApiOperation({
+        title: 'Repay debt',
+        description: 'Repay your outstanding debt to Compound protocol.',
+    })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async repayBorrow(
         @Query('token') token: TokenSymbol,
         @Query('amount', ParseNumberPipe) amount: number,

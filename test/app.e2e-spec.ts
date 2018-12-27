@@ -7,10 +7,11 @@ import winston = require('winston');
 import { format } from 'winston';
 import * as ContractArtifacts from 'dharma-contract-artifacts';
 
-import { CompoundController } from '../src/compound/compound.controller';
-import { CompoundService } from '../src/compound/compound.service';
+import { CompoundController } from '../src/compound/CompoundController';
+import { CompoundService } from '../src/compound/CompoundService';
+import { TokensController } from '../src/tokens/TokensController';
 import { TokenService } from '../src/tokens/TokenService';
-import { KyberService } from '../src/kyber/kyber.service';
+import { KyberService } from '../src/kyber/KyberService';
 import { DharmaDebtRequestService } from '../src/dharma/DharmaDebtRequestService';
 import { CollateralizedSimpleInterestLoanAdapter } from '../src/dharma/CollateralizedSimpleInterestLoanAdapter';
 import { DharmaOrdersFetcher } from '../src/dharma/DharmaOrdersFetcher';
@@ -36,9 +37,9 @@ describe('Compound API (e2e)', () => {
     let app: INestApplication;
     let moduleFixture: TestingModule;
 
-    it('/token-balance (GET)', () => {
+    it('/tokens/balance (GET)', () => {
         return request(app.getHttpServer())
-            .get('/compound/token-balance?token=WETH')
+            .get('/tokens/balance?token=WETH')
             .expect(200)
             .expect(res => {
                 if (!('WETH' in res.body)) throw new Error('missing token key');
@@ -55,7 +56,7 @@ describe('Compound API (e2e)', () => {
         const lockTx = await tokenService.lockToken(TokenSymbol.WETH, moneyMarketContract.address);
         await lockTx.wait();
 
-        const rawTokenBalance = (await req.get('/compound/token-balance?token=WETH')).body.WETH;
+        const rawTokenBalance = (await req.get('/tokens/balance?token=WETH')).body.WETH;
         const tokenBalance = parseBalance(rawTokenBalance);
         expect(tokenBalance.gte(parseBalance(delta))).toBeTruthy();
 
@@ -65,7 +66,7 @@ describe('Compound API (e2e)', () => {
         await req.post(`/compound/supply?token=WETH&amount=${delta}&needAwaitMining=true`);
 
         const expectedTokenBalance = tokenBalance.sub(parseBalance(delta));
-        await req.get('/compound/token-balance?token=WETH').then(x => {
+        await req.get('/tokens/balance?token=WETH').then(x => {
             expect(parseBalance(x.body.WETH).eq(expectedTokenBalance)).toBeTruthy();
         });
 
@@ -79,13 +80,13 @@ describe('Compound API (e2e)', () => {
     it('/withdraw (POST)', async () => {
         const req = request(app.getHttpServer());
 
-        const rawTokenBalance = (await req.get('/compound/token-balance?token=WETH')).body.WETH;
+        const rawTokenBalance = (await req.get('/tokens/balance?token=WETH')).body.WETH;
         const tokenBalance = parseBalance(rawTokenBalance);
 
         await req.post(`/compound/withdraw?token=WETH&amount=${delta}&needAwaitMining=true`);
 
         const expectedTokenBalance = tokenBalance.add(parseBalance(delta));
-        await req.get('/compound/token-balance?token=WETH').then(x => {
+        await req.get('/tokens/balance?token=WETH').then(x => {
             expect(parseBalance(x.body.WETH).eq(expectedTokenBalance)).toBeTruthy();
         });
 
@@ -153,7 +154,7 @@ describe('Compound API (e2e)', () => {
                     }),
                 ],
             })],
-            controllers: [CompoundController],
+            controllers: [CompoundController, TokensController],
             providers: [
                 CompoundService,
                 KyberService,
