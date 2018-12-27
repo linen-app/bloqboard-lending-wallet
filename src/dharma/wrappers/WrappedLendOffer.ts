@@ -283,7 +283,11 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
     private updateTermsContractParameters(collateralAmount: BigNumber): string {
         const encodedCollateralAmount = collateralAmount.toHexString().substring(2).padStart(23, '0');
 
-        const result = this.data.termsContractParameters.substr(0, 39 + 2) + // +2 is for  collateralTokenIndex
+        if (encodedCollateralAmount.length !== 23) {
+            throw new Error('Collateral amount value is too long');
+        }
+
+        const result = this.data.termsContractParameters.substr(0, 39 + 2) + // +2 is for collateralTokenIndex
             encodedCollateralAmount +
             this.data.termsContractParameters.substr(39 + 2, 2);
 
