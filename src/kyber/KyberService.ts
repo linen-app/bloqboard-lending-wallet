@@ -130,7 +130,7 @@ export class KyberService {
             amountToSell.rawAmount,
         );
         const rate: BigNumber = response.slippageRate;
-        const formattedRate = rate.mul(amountToSell.rawAmount).div(new BigNumber(10).pow(32)).toNumber() / 10000;
+        const formattedRate = Number.parseFloat(utils.formatEther(rate));
         return formattedRate;
     }
 
