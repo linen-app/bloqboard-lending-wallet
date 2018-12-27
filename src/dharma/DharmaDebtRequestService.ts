@@ -3,7 +3,7 @@ import { Address, INTEREST_RATE_SCALING_FACTOR_MULTIPLIER } from '../../src/type
 import { Wallet } from 'ethers';
 import { CollateralizedSimpleInterestLoanAdapter } from './CollateralizedSimpleInterestLoanAdapter';
 import { TokenSymbol } from '../tokens/TokenSymbol';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { TokenService } from '../tokens/TokenService';
 import { Logger } from 'winston';
 import { DharmaOrdersFetcher } from './DharmaOrdersFetcher';
@@ -11,6 +11,7 @@ import { Status } from './models/RelayerDebtOrder';
 import { DebtOrderWrapper } from './wrappers/DebtOrderWrapper';
 import { AmortizationUnit } from './models/UnpackedDebtOrderData';
 import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
+import { Pagination } from '../common-models/Pagination';
 
 @Injectable()
 export class DharmaDebtRequestService {
@@ -26,15 +27,22 @@ export class DharmaDebtRequestService {
     ) { }
 
     async getDebtOrders(
-        principalTokenSymbol?: TokenSymbol, collateralTokenSymbol?: TokenSymbol, minUsdAmount?: number, maxUsdAmount?: number,
+        pagination: Pagination,
+        principalTokenSymbol?: TokenSymbol,
+        collateralTokenSymbol?: TokenSymbol,
+        minUsdAmount?: number,
+        maxUsdAmount?: number,
     ): Promise<HumanReadableDebtRequest[]> {
-        const res = await this.ordersFetcher.fetchOrders({
-            status: Status.SignedByDebtor,
-            principalTokenSymbol,
-            collateralTokenSymbol,
-            minUsdAmount,
-            maxUsdAmount,
-        });
+        const res = await this.ordersFetcher.fetchOrders(
+            {
+                status: Status.SignedByDebtor,
+                principalTokenSymbol,
+                collateralTokenSymbol,
+                minUsdAmount,
+                maxUsdAmount,
+            },
+            pagination,
+        );
 
         const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
             this.loanAdapter.fromRelayerDebtOrder(relayerOrder)
@@ -51,12 +59,15 @@ export class DharmaDebtRequestService {
         return humanReadableResponse;
     }
 
-    async getMyLoanedOrders(): Promise<HumanReadableDebtRequest[]> {
-        const res = await this.ordersFetcher.fetchOrders({
-            status: Status.Filled,
-            kind: 'DebtRequest',
-            creditor: this.wallet.address,
-        });
+    async getMyLoanedOrders(pagination: Pagination): Promise<HumanReadableDebtRequest[]> {
+        const res = await this.ordersFetcher.fetchOrders(
+            {
+                status: Status.Filled,
+                kind: 'DebtRequest',
+                creditor: this.wallet.address,
+            },
+            pagination,
+        );
 
         const humanReadableResponse = await Promise.all(res.map(relayerOrder =>
             this.loanAdapter.fromRelayerDebtOrder(relayerOrder)

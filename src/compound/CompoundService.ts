@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Contract, Wallet, ContractTransaction, ethers } from 'ethers';
 import { TokenService } from '../tokens/TokenService';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { KyberService } from '../kyber/KyberService';
 import { BigNumber } from 'ethers/utils';
 import { TokenSymbol } from '../tokens/TokenSymbol';

@@ -5,10 +5,11 @@ import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse, ApiImplicitPar
 import { DharmaLendOffersService } from './DharmaLendOffersService';
 import { ParseNumberPipe } from '../parseNumber.pipe';
 import { TokenSymbol } from '../tokens/TokenSymbol';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import * as Text from '../../resources/ConstantText';
 import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
 import { HumanReadableLendOffer } from './HumanReadableLendOffer';
+import { Pagination } from 'src/common-models/Pagination';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
@@ -32,8 +33,16 @@ export class DharmaController {
         @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
         @Query('collateralToken') collateralToken: TokenSymbol,
         @Query('principalToken') principalToken: TokenSymbol,
+        @Query() pagination: Pagination,
     ): Promise<HumanReadableDebtRequest[]> {
-        const debtRequests = await this.dharmaLoanRequestsService.getDebtOrders(principalToken, collateralToken, minUsdAmount, maxUsdAmount);
+        pagination = { ...Pagination.default, ...pagination };
+        const debtRequests = await this.dharmaLoanRequestsService.getDebtOrders(
+            pagination,
+            principalToken,
+            collateralToken,
+            minUsdAmount,
+            maxUsdAmount,
+        );
 
         return debtRequests;
     }
@@ -44,8 +53,9 @@ export class DharmaController {
         description: 'List of debt requests from Bloqboard Dharma Relayer API, that were filled from the current account.',
     })
     @ApiResponse({ status: HttpStatus.OK, type: HumanReadableDebtRequest, isArray: true })
-    async getMyLoanedAssets(): Promise<HumanReadableDebtRequest[]> {
-        const offers = await this.dharmaLoanRequestsService.getMyLoanedOrders();
+    async getMyLoanedAssets(@Query() pagination: Pagination): Promise<HumanReadableDebtRequest[]> {
+        pagination = { ...Pagination.default, ...pagination };
+        const offers = await this.dharmaLoanRequestsService.getMyLoanedOrders(pagination);
 
         return offers;
     }
@@ -79,8 +89,10 @@ export class DharmaController {
         @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
         @Query('collateralToken') collateralToken: TokenSymbol,
         @Query('principalToken') principalToken: TokenSymbol,
+        @Query() pagination: Pagination,
     ): Promise<HumanReadableLendOffer[]> {
-        const offers = await this.dharmaLendOffersService.getLendOffers(principalToken, collateralToken, minUsdAmount, maxUsdAmount);
+        pagination = { ...Pagination.default, ...pagination };
+        const offers = await this.dharmaLendOffersService.getLendOffers(pagination, principalToken, collateralToken, minUsdAmount, maxUsdAmount);
 
         return offers;
     }
@@ -91,8 +103,9 @@ export class DharmaController {
         description: 'List of lend offers from Bloqboard Dharma Relayer API, that were filled from the current account.',
     })
     @ApiResponse({ status: HttpStatus.OK, type: HumanReadableDebtRequest, isArray: true })
-    async getMyBorrowedAssets(): Promise<HumanReadableDebtRequest[]> {
-        const offers = await this.dharmaLendOffersService.getMyBorrowedOrders();
+    async getMyBorrowedAssets(@Query() pagination: Pagination): Promise<HumanReadableDebtRequest[]> {
+        pagination = { ...Pagination.default, ...pagination };
+        const offers = await this.dharmaLendOffersService.getMyBorrowedOrders(pagination);
 
         return offers;
     }

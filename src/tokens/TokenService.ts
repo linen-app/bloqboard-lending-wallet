@@ -4,7 +4,7 @@ import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
 import { Address, equals } from '../types';
 import { BigNumber } from 'ethers/utils';
 import { Logger } from 'winston';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { TokenSymbol } from './TokenSymbol';
 import { TokenMetadata } from './TokenMetadata';
 import { TokenAmount } from './TokenAmount';

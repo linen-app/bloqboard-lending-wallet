@@ -7,6 +7,7 @@ import { TokenService } from '../tokens/TokenService';
 import { stringify } from 'qs';
 import { Logger } from 'winston';
 import { TokenSymbol } from '../tokens/TokenSymbol';
+import { Pagination } from 'src/common-models/Pagination';
 
 export class OrdersFilter {
     status?: Status;
@@ -36,10 +37,9 @@ export class DharmaOrdersFetcher {
         return response.data;
     }
 
-    async fetchOrders(filter: OrdersFilter): Promise<RelayerDebtOrder[]> {
+    async fetchOrders(filter: OrdersFilter, pagination: Pagination): Promise<RelayerDebtOrder[]> {
         const debtsUrl = `${this.bloqboardUri}/Debts`;
         const kernelAddress = this.dharmaKernelAddress;
-        const pagination = {}; // TODO: add sorting & pagination
         const sorting = {};
 
         const principalToken = filter.principalTokenSymbol && this.tokenService.getTokenBySymbol(filter.principalTokenSymbol);

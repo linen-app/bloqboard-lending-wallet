@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Contract, Wallet, ethers, utils } from 'ethers';
 import { TokenService } from '../tokens/TokenService';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TokenMetadata } from '../tokens/TokenMetadata';
 import { TokenAmount } from '../tokens/TokenAmount';
