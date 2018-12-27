@@ -14,7 +14,7 @@ This solution is provided wittout any warranties and it may contain bugs. User o
 4. Extract private key from your Ethereum account. This can be done on myetherwallet.com for example.
 
 ## Installation
-
+From the project directory run the next command:
 ```bash
 $ npm install
 ```
