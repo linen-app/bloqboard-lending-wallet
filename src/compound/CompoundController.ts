@@ -20,8 +20,8 @@ export class CompoundController {
 
     @Get('supply-balance')
     @ApiOperation({
-        title: 'Supply balance of the current account in Compound protocol',
-        description: 'Return supplied balance of the current account in the specified asset.',
+        title: 'Supply balance of the connected account in Compound protocol',
+        description: 'Return supplied balance of the connected account in the specified asset.',
     })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false, description: Text.SUPPORTED_TOKEND })
     @ApiResponse({ status: HttpStatus.OK, type: Balance })
@@ -37,8 +37,8 @@ export class CompoundController {
 
     @Get('borrow-balance')
     @ApiOperation({
-        title: 'Outstanding debt of the current account to Compound protocol',
-        description: 'Return outstanding debt of the current account in the specified asset.',
+        title: 'Outstanding debt of the connected account to the Compound protocol',
+        description: 'Return outstanding debt of the connected account in the specified asset.',
     })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens, required: false, description: Text.SUPPORTED_TOKEND })
     @ApiResponse({ status: HttpStatus.OK, type: Balance })
@@ -68,7 +68,7 @@ export class CompoundController {
     @Post('supply')
     @ApiOperation({
         title: 'Supply asset',
-        description: 'Supply principal as lender or collateral as borrower to Compound protocol.',
+        description: 'Supply principal as a lender or collateral as a borrower to the Compound protocol.',
     })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })

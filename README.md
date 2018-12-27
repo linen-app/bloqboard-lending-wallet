@@ -29,7 +29,7 @@ To start the app with Mainnet config, run the following command in the console:
 $ NETWORK=mainnet npm run start
 ```
 
-Now the app is running on `localhost:3000` and you can interact with the app using [Swagger UI](http://localhost:3000/api/)
+Now the app is running on `localhost:3000/api` and you can interact with the app using [Swagger UI](http://localhost:3000/api/)
 
 ## Test
 

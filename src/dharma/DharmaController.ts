@@ -38,8 +38,8 @@ export class DharmaController {
         return debtRequests;
     }
 
-    @Get('my-loaned-assets')
-    @ApiOperation({ title: 'Return list of debt requests from Bloqboard Dharma Relayer API, that were filled from the current account.' })
+    @Get('my-filled-debt-requests')
+    @ApiOperation({ title: 'Return list of debt requests from Bloqboard Dharma Relayer API that were filled from the connected address.' })
     @ApiResponse({ status: HttpStatus.OK, type: HumanReadableDebtRequest, isArray: true })
     async getMyLoanedAssets(): Promise<HumanReadableDebtRequest[]> {
         const offers = await this.dharmaLoanRequestsService.getMyLoanedOrders();
@@ -50,7 +50,7 @@ export class DharmaController {
     @Post('fill-debt-request/:debtRequestId')
     @ApiOperation({
         title: 'Lend tokens by filling a debt request',
-        description: 'Fills specified debt request. Unlocks principal token if needed.',
+        description: 'Fills specified debt request. Automatically unlocks principal token if needed.',
     })
     @ApiImplicitParam({ name: 'debtRequestId', description: 'debt request ID from Bloqboard API' })
     @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })
@@ -92,8 +92,8 @@ export class DharmaController {
 
     @Post('fill-lend-offer/:lendOfferId')
     @ApiOperation({
-        title: 'Borrow tokens by filling a offer to lend',
-        description: 'Fills specified offer to lend. Unlocks collateral token if needed.',
+        title: 'Borrow tokens by filling a offer-to-lend',
+        description: 'Fills specified offer to lend. Automatically unlocks collateral token if needed.',
     })
     @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
     @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })

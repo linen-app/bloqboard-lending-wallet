@@ -22,7 +22,7 @@ export class KyberController {
         title: 'Return exchange rate',
         description: 'Exchange rate provided by Kyber exchange. Returned value is an exchange rate for tokenToBuy/tokenToSell',
     })
-    @ApiImplicitQuery({ name: 'amountToBuy', description: 'this amount is used by Kyber smart contract to determine exchange rate more precisely.' })
+    @ApiImplicitQuery({ name: 'amountToBuy', description: 'Helps determine the aggregate exchange rate more precisely by accounting for slippage' })
     @ApiImplicitQuery({ name: 'tokenToSell', enum: supportedTokens })
     @ApiImplicitQuery({ name: 'tokenToBuy', enum: supportedTokens })
     async getExchangeRate(
@@ -37,9 +37,9 @@ export class KyberController {
 
     @Post('sell')
     @ApiOperation({
-        title: 'Sell token',
-        description: 'Convert specified of tokenToSell to tokenToBuy. Exchange rate will be provided by Kyber exchange. ' +
-        'Unlocks tokenToSell if needed.',
+        title: 'Market sell a token',
+        description: 'Convert specified tokenToSell to tokenToBuy. Exchange rate will be provided by Kyber exchange.' +
+        'Automatically unlocks tokenToSell if needed.',
     })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     @ApiImplicitQuery({ name: 'tokenToSell', enum: supportedTokens })
@@ -58,9 +58,9 @@ export class KyberController {
 
     @Post('buy')
     @ApiOperation({
-        title: 'Buy token',
-        description: 'Convert tokenToSell to specified amount of tokenToBuy. Exchange rate will be provided by Kyber exchange. ' +
-        'Unlocks tokenToSell if needed',
+        title: 'Market buy a token',
+        description: 'Convert specified tokenToSell to tokenToBuy. Exchange rate will be provided by Kyber exchange.' +
+        'Automatically unlocks tokenToSell if needed',
     })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     @ApiImplicitQuery({ name: 'tokenToBuy', enum: supportedTokens })

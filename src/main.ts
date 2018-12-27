@@ -9,10 +9,10 @@ async function bootstrap() {
     .setTitle('Bloqboard Lending Wallet')
     .setDescription('Bloqboard Lending Wallet API description')
     .setVersion('0.1')
-    .addTag('Wallet', 'check your token balances')
-    .addTag('Dharma @ Bloqboard', 'borrow and lend crypto-assets instantly using Bloqboard decentralized lending platform and Dharma protocol')
-    .addTag('Compound', 'is an open-source protocol for algorithmic, efficient Money Markets on the Ethereum blockchain')
-    .addTag('Kyber Network', 'performs decentralized and instant token swaps')
+    .addTag('Wallet', 'Check token balances in your connected address')
+    .addTag('Dharma @ Bloqboard', 'Borrow and lend digital assets using Bloqboard lending platform and Dharma protocol')
+    .addTag('Compound', 'Open-source protocol for algorithmic, efficient Money Markets on the Ethereum blockchain')
+    .addTag('Kyber Network', 'Performs decentralized and instant token swaps')
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
