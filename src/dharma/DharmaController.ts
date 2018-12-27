@@ -38,8 +38,11 @@ export class DharmaController {
         return debtRequests;
     }
 
-    @Get('my-loaned-assets')
-    @ApiOperation({ title: 'Return list of debt requests from Bloqboard Dharma Relayer API, that were filled from the current account.' })
+    @Get('my-filled-debt-requests')
+    @ApiOperation({
+        title: 'Return list of my loaned debt requests',
+        description: 'List of debt requests from Bloqboard Dharma Relayer API, that were filled from the current account.',
+    })
     @ApiResponse({ status: HttpStatus.OK, type: HumanReadableDebtRequest, isArray: true })
     async getMyLoanedAssets(): Promise<HumanReadableDebtRequest[]> {
         const offers = await this.dharmaLoanRequestsService.getMyLoanedOrders();
@@ -82,13 +85,17 @@ export class DharmaController {
         return offers;
     }
 
-    // TODO: creditor is a smart contract
-    // @Get('my-borrowed-assets')
-    // async getMyBorrowedAssets(): Promise<any> {
-    //     const offers = await this.dharmaLendOffersService.getMyBorrowedOrders();
+    @Get('my-filled-lend-offers')
+    @ApiOperation({
+        title: 'Return list of my borrowed lend offers',
+        description: 'List of lend offers from Bloqboard Dharma Relayer API, that were filled from the current account.',
+    })
+    @ApiResponse({ status: HttpStatus.OK, type: HumanReadableDebtRequest, isArray: true })
+    async getMyBorrowedAssets(): Promise<HumanReadableDebtRequest[]> {
+        const offers = await this.dharmaLendOffersService.getMyBorrowedOrders();
 
-    //     return offers;
-    // }
+        return offers;
+    }
 
     @Post('fill-lend-offer/:lendOfferId')
     @ApiOperation({

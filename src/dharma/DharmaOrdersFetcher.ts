@@ -10,6 +10,7 @@ import { TokenSymbol } from '../tokens/TokenSymbol';
 
 export class OrdersFilter {
     status?: Status;
+    kind?: 'LendOffer' | 'DebtRequest';
     principalTokenSymbol?: TokenSymbol;
     collateralTokenSymbol?: TokenSymbol;
     minUsdAmount?: number;

@@ -54,6 +54,7 @@ export class DharmaDebtRequestService {
     async getMyLoanedOrders(): Promise<HumanReadableDebtRequest[]> {
         const res = await this.ordersFetcher.fetchOrders({
             status: Status.Filled,
+            kind: 'DebtRequest',
             creditor: this.wallet.address,
         });
 
