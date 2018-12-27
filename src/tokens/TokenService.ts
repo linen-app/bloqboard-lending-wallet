@@ -60,7 +60,7 @@ export class TokenService {
 
         const tx: ContractTransaction = await contract.approve(spender, 
             ethers.constants.MaxUint256,
-            { nonce, gasLimit: 50000 }
+            { nonce, gasLimit: 90000 }
         );
 
         this.logger.info(`Unlocking ${symbol} for spender: ${spender}`);
