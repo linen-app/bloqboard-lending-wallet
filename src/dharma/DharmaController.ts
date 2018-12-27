@@ -4,6 +4,7 @@ import { DharmaDebtRequestService } from './DharmaDebtRequestService';
 import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse, ApiImplicitParam } from '@nestjs/swagger';
 import { DharmaLendOffersService } from './DharmaLendOffersService';
 import { ParseNumberPipe } from '../parseNumber.pipe';
+import { ParseNullableNumberPipe } from '../parseNullableNumber.pipe';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TransactionLog } from '../common-models/TransactionLog';
 import * as Text from '../../resources/ConstantText';
@@ -25,12 +26,12 @@ export class DharmaController {
     @ApiOperation({ title: 'Return list of open debt requests from Bloqboard Dharma Relayer API' })
     @ApiImplicitQuery({ name: 'principalToken', enum: supportedTokens, required: false, description: 'filter by principal token' })
     @ApiImplicitQuery({ name: 'collateralToken', enum: supportedTokens, required: false, description: 'filter by collateral token' })
-    @ApiImplicitQuery({ name: 'minUsdAmount', description: 'minimal amout in USD for principal in returned request' })
-    @ApiImplicitQuery({ name: 'maxUsdAmount', description: 'maximal amout in USD for principal in returned request' })
+    @ApiImplicitQuery({ name: 'minUsdAmount', required: false, description: 'minimal amout in USD for principal in returned request' })
+    @ApiImplicitQuery({ name: 'maxUsdAmount', required: false, description: 'maximal amout in USD for principal in returned request' })
     @ApiResponse({ status: HttpStatus.OK, type: HumanReadableDebtRequest, isArray: true })
     async getDebtRequests(
-        @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
-        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
+        @Query('maxUsdAmount', ParseNullableNumberPipe) maxUsdAmount: number,
+        @Query('minUsdAmount', ParseNullableNumberPipe) minUsdAmount: number,
         @Query('collateralToken') collateralToken: TokenSymbol,
         @Query('principalToken') principalToken: TokenSymbol,
         @Query() pagination: Pagination,
@@ -81,12 +82,12 @@ export class DharmaController {
     @ApiOperation({ title: 'Return list of open lend offers from Bloqboard Dharma Relayer API' })
     @ApiImplicitQuery({ name: 'principalToken', enum: supportedTokens, required: false, description: 'filter by principal token' })
     @ApiImplicitQuery({ name: 'collateralToken', enum: supportedTokens, required: false, description: 'filter by collateral token' })
-    @ApiImplicitQuery({ name: 'minUsdAmount', description: 'minimal amout in USD for principal in returned offer' })
-    @ApiImplicitQuery({ name: 'maxUsdAmount', description: 'maximal amout in USD for principal in returned offer' })
+    @ApiImplicitQuery({ name: 'minUsdAmount', required: false, description: 'minimal amout in USD for principal in returned offer' })
+    @ApiImplicitQuery({ name: 'maxUsdAmount', required: false, description: 'maximal amout in USD for principal in returned offer' })
     @ApiResponse({ status: HttpStatus.OK, type: HumanReadableLendOffer, isArray: true })
     async getLendOffers(
-        @Query('maxUsdAmount', ParseNumberPipe) maxUsdAmount: number,
-        @Query('minUsdAmount', ParseNumberPipe) minUsdAmount: number,
+        @Query('maxUsdAmount', ParseNullableNumberPipe) maxUsdAmount: number,
+        @Query('minUsdAmount', ParseNullableNumberPipe) minUsdAmount: number,
         @Query('collateralToken') collateralToken: TokenSymbol,
         @Query('principalToken') principalToken: TokenSymbol,
         @Query() pagination: Pagination,
