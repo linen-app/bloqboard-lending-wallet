@@ -1,19 +1,7 @@
 import { Module, Inject } from '@nestjs/common';
 import { ethers } from 'ethers';
-import winston = require('winston');
 import { format } from 'winston';
 import { WinstonModule } from 'nest-winston';
-import * as ContractArtifacts from 'dharma-contract-artifacts';
-
-import * as Compound from '../resources/money-market.json';
-import * as Kyber from '../resources/kyber-network-proxy.json';
-import * as Account from '../resources/account.json';
-import * as Tokens from '../resources/tokens.json';
-import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json';
-import * as Addresses from '../resources/dharma/addresses.json';
-import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
-import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
-
 import { CompoundController } from './compound/CompoundController';
 import { DharmaController } from './dharma/DharmaController';
 import { CompoundService } from './compound/CompoundService';
@@ -28,6 +16,18 @@ import { TokenMetadata } from './tokens/TokenMetadata';
 import { DebtOrderWrapper } from './dharma/wrappers/DebtOrderWrapper';
 import { MessageSigner } from './dharma/MessageSigner';
 import { TokensController } from './tokens/TokensController';
+import { RootController } from './root/RootController';
+import winston = require('winston');
+import * as ContractArtifacts from 'dharma-contract-artifacts';
+
+import * as Compound from '../resources/money-market.json';
+import * as Kyber from '../resources/kyber-network-proxy.json';
+import * as Account from '../resources/account.json';
+import * as Tokens from '../resources/tokens.json';
+import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json';
+import * as Addresses from '../resources/dharma/addresses.json';
+import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
+import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 
 const NETWORK = process.env.NETWORK || 'kovan';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -91,7 +91,13 @@ const collateralizedContract = new ethers.Contract(
             ],
         }),
     ],
-    controllers: [CompoundController, KyberController, DharmaController, TokensController],
+    controllers: [
+        CompoundController,
+        KyberController,
+        DharmaController,
+        TokensController,
+        RootController,
+    ],
     providers: [
         CompoundService,
         KyberService,
