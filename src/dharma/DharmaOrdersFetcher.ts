@@ -1,7 +1,7 @@
 import { Agent } from 'https';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, HttpException } from '@nestjs/common';
 import { RelayerDebtOrder, Status } from './models/RelayerDebtOrder';
-import Axios from 'axios';
+import Axios, { AxiosError } from 'axios';
 import { Address } from 'src/types';
 import { TokenService } from '../tokens/TokenService';
 import { stringify } from 'qs';
@@ -29,12 +29,18 @@ export class DharmaOrdersFetcher {
         private readonly tokenService: TokenService,
     ) { }
     async fetchOrder(offerId: string): Promise<RelayerDebtOrder> {
-        const debtsUrl = `${this.bloqboardUri}/Debts`;
-        const response = await Axios.get(`${debtsUrl}/${offerId}`, {
-            httpsAgent: new Agent({ rejectUnauthorized: false }),
-        });
+        const url = `${this.bloqboardUri}/Debts/${offerId}`;
+        try {
+            const response = await Axios.get(url, {
+                httpsAgent: new Agent({ rejectUnauthorized: false }),
+            });
 
-        return response.data;
+            return response.data;
+        } catch (e) {
+            const error = e as AxiosError;
+            this.logger.error(`${error.message}: ${url}`);
+            throw new HttpException(error.response.data, error.response.status);
+        }
     }
 
     async fetchOrders(filter: OrdersFilter, pagination: Pagination): Promise<RelayerDebtOrder[]> {
@@ -60,14 +66,21 @@ export class DharmaOrdersFetcher {
 
         const str = (parameters: any) => stringify(parameters, { allowDots: true, arrayFormat: 'repeat' });
 
-        const response = await Axios.get(debtsUrl, {
-            params,
-            paramsSerializer: str,
-            httpsAgent: new Agent({ rejectUnauthorized: false }),
-        });
+        try {
+            const response = await Axios.get(debtsUrl, {
+                params,
+                paramsSerializer: str,
+                httpsAgent: new Agent({ rejectUnauthorized: false }),
+            });
 
-        this.logger.info(`Recieved ${response.data.length} debt orders from ${response.config.url}?${str(params)}`);
+            this.logger.info(`Recieved ${response.data.length} debt orders from ${response.config.url}?${str(params)}`);
 
-        return response.data;
+            return response.data;
+
+        } catch (e) {
+            const error = e as AxiosError;
+            this.logger.error(`${error.message}: ${error.response.config.url}?${str(params)}`);
+            throw new HttpException(error.response.data || 'Request to Bloqboard Relayer API failed', error.response.status);
+        }
     }
 }
