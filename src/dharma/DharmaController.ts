@@ -1,7 +1,7 @@
 import { Get, Controller, Post, Query, Res, HttpStatus, Param } from '@nestjs/common';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { DharmaDebtRequestService } from './DharmaDebtRequestService';
-import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse, ApiImplicitParam } from '@nestjs/swagger';
 import { DharmaLendOffersService } from './DharmaLendOffersService';
 import { ParseNumberPipe } from '../parseNumber.pipe';
 import { TokenSymbol } from '../tokens/TokenSymbol';
@@ -52,7 +52,7 @@ export class DharmaController {
         title: 'Lend tokens by filling a debt request',
         description: 'Fills specified debt request. Unlocks principal token if needed.',
     })
-    @ApiImplicitQuery({ name: 'debtRequestId', description: 'debt request ID from Bloqboard API' })
+    @ApiImplicitParam({ name: 'debtRequestId', description: 'debt request ID from Bloqboard API' })
     @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async fillDebtRequest(
@@ -95,7 +95,7 @@ export class DharmaController {
         title: 'Borrow tokens by filling a offer to lend',
         description: 'Fills specified offer to lend. Unlocks collateral token if needed.',
     })
-    @ApiImplicitQuery({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
+    @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
     @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async fillLendOffer(
@@ -112,7 +112,7 @@ export class DharmaController {
         title: 'Repay filled lend offers',
         description: 'Fills specified offer to lend. Unlocks collateral token if needed.',
     })
-    @ApiImplicitQuery({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
+    @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
     @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async repayLendOffer(
@@ -130,7 +130,7 @@ export class DharmaController {
         title: 'Return collateral',
         description: 'Returns collateral of specified loan, if it is already repaid.',
     })
-    @ApiImplicitQuery({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
+    @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
     @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async returnCollateral(
