@@ -67,9 +67,9 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
         const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(
-            token.address, 
+            token.address,
             tokenAmount.rawAmount,
-            { gasLimit: 320000 }
+            { gasLimit: 320000 },
         );
 
         this.logger.info(`Withdrawing ${tokenAmount}`);
@@ -85,14 +85,14 @@ export class CompoundService {
             }],
         );
     }
-    
+
     async borrow(symbol: TokenSymbol, humanReadableTokenAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
         const txObject: ContractTransaction = await this.moneyMarketContract.borrow(
-            token.address, 
+            token.address,
             tokenAmount.rawAmount,
-            { gasLimit: 360000 }
+            { gasLimit: 360000 },
         );
 
         this.logger.info(`Borrowing ${tokenAmount}`);
