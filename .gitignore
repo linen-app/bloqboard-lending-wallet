@@ -80,7 +80,7 @@ typings/
 
 dist/
 
-account.json
+resources/account*
 
 .vscode/
 
