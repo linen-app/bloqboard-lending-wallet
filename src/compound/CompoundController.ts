@@ -71,6 +71,7 @@ export class CompoundController {
         description: 'Supply principal as a lender or collateral as a borrower to the Compound protocol.',
     })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async supply(
         @Query('token') token: TokenSymbol,
@@ -89,11 +90,13 @@ export class CompoundController {
             '\nWARNING! Your collateral can be liquidated if your account liquidity drops below 0.',
     })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'amount', description: Text.WITHDRAW_AMOUNT })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async withdraw(
         @Query('token') token: TokenSymbol,
         @Query('amount', ParseNumberPipe) amount: number,
-        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true, 
         @Res() res,
     ): Promise<string> {
         const result = await this.compoundService.withdraw(token, amount, needAwaitMining);
@@ -107,6 +110,7 @@ export class CompoundController {
             '\nWARNING! Your collateral can be liquidated if your account liquidity drops below 0.',
     })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async borrow(
         @Query('token') token: TokenSymbol,
@@ -124,6 +128,8 @@ export class CompoundController {
         description: 'Repay your outstanding debt to Compound protocol.',
     })
     @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'amount', description: Text.REPAY_AMOUNT })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async repayBorrow(
         @Query('token') token: TokenSymbol,

@@ -1,3 +1,7 @@
-export const NEED_AWAIT_MINING = 'wait till all transactions will be mined in some block or return transaction data immideatley?';
+export const NEED_AWAIT_MINING = 'Wait until all transactions are mined or return transaction data immediately?';
 
-export const SUPPORTED_TOKEND = 'if a token is not specified, endpoint returns balances of all supported tokens';
+export const SUPPORTED_TOKEND = 'If no token is specified, balances of all supported tokens are returned';
+
+export const REPAY_AMOUNT = '"-1" will repay full amount';
+
+export const WITHDRAW_AMOUNT = '"-1" will withdraw full amount';

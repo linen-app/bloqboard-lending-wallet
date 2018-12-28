@@ -113,7 +113,8 @@ export class DharmaController {
         description: 'Fills specified offer to lend. Unlocks collateral token if needed.',
     })
     @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
-    @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
+    @ApiImplicitQuery({ name: 'amount', description: Text.REPAY_AMOUNT })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async repayLendOffer(
         @Param('lendOfferId') lendOfferId: string,
@@ -131,7 +132,7 @@ export class DharmaController {
         description: 'Returns collateral of specified loan, if it is already repaid.',
     })
     @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
-    @ApiImplicitQuery({ name: 'needAwaitMining', required: false })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async returnCollateral(
         @Param('lendOfferId') lendOfferId: string,
