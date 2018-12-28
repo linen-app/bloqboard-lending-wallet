@@ -5,8 +5,8 @@ import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { utils } from 'ethers';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { ParseNumberPipe } from '../parseNumber.pipe';
-import { TransactionLog } from '../TransactionLog';
-import { Balance } from '../HumanReadableBalance';
+import { TransactionLog } from '../common-models/TransactionLog';
+import { Balance } from '../common-models/HumanReadableBalance';
 import * as Text from '../../resources/ConstantText';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];

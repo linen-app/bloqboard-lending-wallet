@@ -1,13 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as ERC20 from '../../resources/erc20.json';
-import { Wallet, Contract, utils, ContractTransaction, ethers } from 'ethers';
+import { Wallet, Contract, ContractTransaction, ethers } from 'ethers';
 import { Address, equals } from '../types';
 import { BigNumber } from 'ethers/utils';
 import { Logger } from 'winston';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { TokenSymbol } from './TokenSymbol';
 import { TokenMetadata } from './TokenMetadata';
 import { TokenAmount } from './TokenAmount';
+import { SmartContractInvariantViolationError } from '../errors/SmartContractInvariantViolationError';
 
 @Injectable()
 export class TokenService {
@@ -43,6 +44,7 @@ export class TokenService {
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
         const balance: BigNumber = await contract.balanceOf(this.wallet.address);
+
         return new TokenAmount(balance, token);
     }
 
@@ -58,7 +60,10 @@ export class TokenService {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const tx: ContractTransaction = await contract.approve(spender, ethers.constants.MaxUint256, { nonce });
+        const tx: ContractTransaction = await contract.approve(spender, 
+            ethers.constants.MaxUint256,
+            { nonce, gasLimit: 90000 }
+        );
 
         this.logger.info(`Unlocking ${symbol} for spender: ${spender}`);
 
@@ -69,7 +74,7 @@ export class TokenService {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const tx: ContractTransaction = await contract.approve(spender, 0);
+        const tx: ContractTransaction = await contract.approve(spender, 0, { gasLimit: 50000 });
 
         this.logger.info(`Locking ${symbol} for spender: ${spender}`);
 
@@ -80,6 +85,13 @@ export class TokenService {
         if (await this.isTokenLockedForSpender(symbol, spender)) {
             const unlockTx = await this.unlockToken(symbol, spender, nonce);
             transactions.add({ name: 'unlock', transactionObject: unlockTx });
+        }
+    }
+
+    async assertTokenBalance(requiredAmount: TokenAmount){
+        const balance = await this.getTokenBalance(requiredAmount.token.symbol);
+        if (requiredAmount.rawAmount.gt(balance.rawAmount)){
+            throw new SmartContractInvariantViolationError(`Token balance is too low: needed ${requiredAmount}, you have ${balance}`);
         }
     }
 }

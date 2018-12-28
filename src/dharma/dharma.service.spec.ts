@@ -19,6 +19,7 @@ import { DebtOrderWrapper } from './wrappers/DebtOrderWrapper';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { DharmaOrdersFetcher } from './DharmaOrdersFetcher';
 import { MessageSigner } from './MessageSigner';
+import { Pagination } from '../common-models/Pagination';
 
 describe('DharmaService', () => {
     let dharmaLendOffersService: DharmaLendOffersService;
@@ -112,7 +113,7 @@ describe('DharmaService', () => {
     });
 
     it('should get and fill lend offer', async () => {
-        const res: any[] = await dharmaLendOffersService.getLendOffers(TokenSymbol.WETH, TokenSymbol.ZRX, 0, 5);
+        const res: any[] = await dharmaLendOffersService.getLendOffers(Pagination.default, TokenSymbol.WETH, TokenSymbol.ZRX, 0, 5);
         expect(res.length).toBeGreaterThan(0);
 
         const tx = await dharmaLendOffersService.fillLendOffer(res[0].id, true);
@@ -120,7 +121,7 @@ describe('DharmaService', () => {
     });
 
     it('should get and fill debt request', async () => {
-        const res: any[] = await dharmaDebtRequestsService.getDebtOrders(TokenSymbol.WETH, TokenSymbol.ZRX, 0, 5);
+        const res: any[] = await dharmaDebtRequestsService.getDebtOrders(Pagination.default, TokenSymbol.WETH, TokenSymbol.ZRX, 0, 5);
         expect(res.length).toBeGreaterThan(0);
 
         const tx = await dharmaDebtRequestsService.fillDebtRequest(res[0].id, true);

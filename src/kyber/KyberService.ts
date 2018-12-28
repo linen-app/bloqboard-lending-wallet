@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Contract, Wallet, ethers, utils } from 'ethers';
 import { TokenService } from '../tokens/TokenService';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TokenMetadata } from '../tokens/TokenMetadata';
 import { TokenAmount } from '../tokens/TokenAmount';
@@ -33,6 +33,7 @@ export class KyberService {
         );
         const transactions = new TransactionLog();
 
+        await this.tokenService.assertTokenBalance(amountToSell);
         await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions);
 
         const { slippageRate } = await this.kyberContract.getExpectedRate(amountToSell.token.address, tokenToBuy.address, amountToSell.rawAmount);
@@ -86,13 +87,13 @@ export class KyberService {
         nonce?: number,
     ): Promise<TransactionLog> {
         const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
+        const approximateAmountToSell = await this.calcApproximateAmountToSell(amountToBuy, tokenToSell);
+        const { amountToSell, rate } = await this.calcAmountToSell(amountToBuy, approximateAmountToSell);
 
         const transactions = new TransactionLog();
 
+        await this.tokenService.assertTokenBalance(amountToSell);
         await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions, nonce);
-
-        const approximateAmountToSell = await this.calcApproximateAmountToSell(amountToBuy, tokenToSell);
-        const { amountToSell, rate } = await this.calcAmountToSell(amountToBuy, approximateAmountToSell);
 
         const tradeTx = await this.kyberContract.trade(
             tokenToSell.address,

@@ -241,14 +241,9 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
     }
 
     async repay(amount: BigNumber, txOpts: TransactionRequest = {}): Promise<TransactionResponse> {
-
-        if (amount.eq(constants.MaxUint256)) {
-            amount = await this.getOutstandingRepaymentAmount();
-        }
-
         return this.repaymentRouter.repay(
             this.getIssuanceCommitmentHash(),
-            amount.toString(),
+            amount,
             this.debtOrderData.principal.token.address,
             { ...txOpts, gasLimit: 150000 },
         );
@@ -283,7 +278,11 @@ export class WrappedLendOffer extends WrappedDebtOrderBase {
     private updateTermsContractParameters(collateralAmount: BigNumber): string {
         const encodedCollateralAmount = collateralAmount.toHexString().substring(2).padStart(23, '0');
 
-        const result = this.data.termsContractParameters.substr(0, 39 + 2) + // +2 is for  collateralTokenIndex
+        if (encodedCollateralAmount.length !== 23) {
+            throw new Error('Collateral amount value is too long');
+        }
+
+        const result = this.data.termsContractParameters.substr(0, 39 + 2) + // +2 is for collateralTokenIndex
             encodedCollateralAmount +
             this.data.termsContractParameters.substr(39 + 2, 2);
 

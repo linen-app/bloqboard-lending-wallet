@@ -12,7 +12,10 @@ export class TokenAmount {
             amount = ethers.constants.MaxUint256;
         }
         else {
-            amount = utils.parseUnits(humanReadableAmount.toString(), token.decimals);
+            amount = utils.parseUnits(
+                humanReadableAmount.toFixed(token.decimals),
+                token.decimals,
+            );
         }
         return new TokenAmount(amount, token);
     }

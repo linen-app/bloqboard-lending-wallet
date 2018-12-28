@@ -4,7 +4,7 @@ import { KyberService } from './KyberService';
 import { ParseBooleanPipe } from '../parseBoolean.pipe';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { ParseNumberPipe } from '../parseNumber.pipe';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import * as Text from '../../resources/ConstantText';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];

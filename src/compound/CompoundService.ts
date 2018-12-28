@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Contract, Wallet, ContractTransaction, ethers } from 'ethers';
 import { TokenService } from '../tokens/TokenService';
-import { TransactionLog } from '../TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { KyberService } from '../kyber/KyberService';
 import { BigNumber } from 'ethers/utils';
 import { TokenSymbol } from '../tokens/TokenSymbol';
@@ -41,6 +41,7 @@ export class CompoundService {
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
         const transactions = new TransactionLog();
 
+        await this.tokenService.assertTokenBalance(tokenAmount);
         await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const supplyTx: ContractTransaction = await this.moneyMarketContract.supply(
@@ -65,7 +66,11 @@ export class CompoundService {
     async withdraw(symbol: TokenSymbol, humanReadableTokenAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
-        const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(token.address, tokenAmount.rawAmount);
+        const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(
+            token.address, 
+            tokenAmount.rawAmount,
+            { gasLimit: 320000 }
+        );
 
         this.logger.info(`Withdrawing ${tokenAmount}`);
 
@@ -80,11 +85,15 @@ export class CompoundService {
             }],
         );
     }
-
+    
     async borrow(symbol: TokenSymbol, humanReadableTokenAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
-        const txObject: ContractTransaction = await this.moneyMarketContract.borrow(token.address, tokenAmount.rawAmount);
+        const txObject: ContractTransaction = await this.moneyMarketContract.borrow(
+            token.address, 
+            tokenAmount.rawAmount,
+            { gasLimit: 360000 }
+        );
 
         this.logger.info(`Borrowing ${tokenAmount}`);
 
@@ -110,6 +119,7 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
 
+        await this.tokenService.assertTokenBalance(tokenAmount);
         await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const neededTokenAmount = tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ?
