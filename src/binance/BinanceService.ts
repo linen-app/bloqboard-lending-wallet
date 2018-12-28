@@ -1,10 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Binance, Account, OrderSide } from 'binance-api-node';
+import { Logger } from 'winston';
 import { ContractTransaction } from 'ethers';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TokenAmount } from '../tokens/TokenAmount';
 import { TokenService } from '../tokens/TokenService';
-import { Logger } from 'winston';
+import { InvariantViolationError } from '../errors/SmartContractInvariantViolationError';
+
+const supportedTokens = [TokenSymbol.WETH, TokenSymbol.BAT, TokenSymbol.REP, TokenSymbol.ZRX];
+const availableMarkets = supportedTokens.filter(x => x !== TokenSymbol.WETH).map(x => x + 'ETH');
 
 @Injectable()
 export class BinanceService {
@@ -25,11 +29,14 @@ export class BinanceService {
         const amount = TokenAmount.fromHumanReadable(humanReadableAmount, token);
         await this.tokenService.assertTokenBalance(amount);
 
+        if (!supportedTokens.includes(tokenSymbol)) {
+            throw new InvariantViolationError(`Token is not supported on Binance: ${tokenSymbol}`);
+        }
+
         const response = await this.binanceClient.depositAddress({ asset: token.symbol });
-        // TODO: add check for supported tokens
 
         if (!response.success || response.asset !== tokenSymbol) {
-            throw new Error('Error occured getting Binance deposit address');
+            throw new InvariantViolationError('Error occured getting Binance deposit address');
         }
 
         this.logger.info(`Depositing ${amount} to binance address ${response.address}`);
@@ -46,14 +53,17 @@ export class BinanceService {
         });
 
         if (!response.success) {
-            throw new Error(`Error occured withdrawing ${amount} from Binance`);
+            throw new InvariantViolationError(`Error occured withdrawing ${amount} from Binance: ${response.msg}`);
         }
 
-        this.logger.info(`Withdrawing ${amount} from Binance address`);
+        this.logger.info(`Withdrawing ${amount} from Binance address: ${response.msg}. id: ${response.id}`);
     }
 
     async sell(amountToSell: TokenAmount, tokenToBuy: TokenSymbol) {
         const { symbol, side } = this.getBinanceSymbol(amountToSell.token.symbol, tokenToBuy);
+
+        this.logger.info(`${side} ${symbol} on Binance. Amount: ${amountToSell}`);
+
         const response = await this.binanceClient.order({
             symbol,
             side,
@@ -61,15 +71,16 @@ export class BinanceService {
             type: 'MARKET',
         });
 
-        this.logger.info(`Selling ${amountToSell} for ${tokenToBuy} on Binance`);
-
         if (response.status !== 'FILLED') {
-            throw new Error(`Invalid order status ${response.status} when selling ${amountToSell} for ${tokenToBuy}`);
+            throw new InvariantViolationError(
+                `Invalid order status ${response.status} when selling ${amountToSell} for ${tokenToBuy}: ${response.status}`,
+            );
         }
+
+        this.logger.info(`Trade successful: price: ${response.price}, id: ${response.clientOrderId}`);
     }
 
     private getBinanceSymbol(baseToken: TokenSymbol, quoteToken: TokenSymbol): { symbol: string; side: OrderSide } {
-        const availableMarkets = ['REPETH', 'BATETH', 'ZRXETH'];
         const parseSymbol = (token: TokenSymbol) => token === TokenSymbol.WETH ? 'ETH' : token;
 
         const parsedBaseSymbol = parseSymbol(baseToken);
@@ -87,6 +98,6 @@ export class BinanceService {
             };
         }
 
-        throw new Error(`Unsupported market: ${parsedBaseSymbol}${parsedQuoteSymbol}`);
+        throw new InvariantViolationError(`Unsupported market: ${parsedBaseSymbol}${parsedQuoteSymbol}`);
     }
 }

@@ -1,14 +1,14 @@
 import { ArgumentsHost, Catch, Inject, HttpServer, BadRequestException } from '@nestjs/common';
-import { SmartContractInvariantViolationError } from '../errors/SmartContractInvariantViolationError';
+import { InvariantViolationError } from '../errors/SmartContractInvariantViolationError';
 import { BaseExceptionFilter, HTTP_SERVER_REF } from '@nestjs/core';
 
-@Catch(SmartContractInvariantViolationError)
-export class SmartContractInvariantViolationFilter extends BaseExceptionFilter<SmartContractInvariantViolationError> {
+@Catch(InvariantViolationError)
+export class SmartContractInvariantViolationFilter extends BaseExceptionFilter<InvariantViolationError> {
     constructor(@Inject(HTTP_SERVER_REF) applicationRef: HttpServer) {
         super(applicationRef);
     }
 
-    catch(exception: SmartContractInvariantViolationError, host: ArgumentsHost) {
+    catch(exception: InvariantViolationError, host: ArgumentsHost) {
         super.catch(new BadRequestException(exception.message), host);
     }
 }

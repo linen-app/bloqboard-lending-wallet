@@ -8,7 +8,7 @@ import { TransactionLog } from '../common-models/TransactionLog';
 import { TokenSymbol } from './TokenSymbol';
 import { TokenMetadata } from './TokenMetadata';
 import { TokenAmount } from './TokenAmount';
-import { SmartContractInvariantViolationError } from '../errors/SmartContractInvariantViolationError';
+import { InvariantViolationError } from '../errors/SmartContractInvariantViolationError';
 
 @Injectable()
 export class TokenService {
@@ -103,7 +103,7 @@ export class TokenService {
     async assertTokenBalance(requiredAmount: TokenAmount) {
         const balance = await this.getTokenBalance(requiredAmount.token.symbol);
         if (requiredAmount.rawAmount.gt(balance.rawAmount)) {
-            throw new SmartContractInvariantViolationError(`Token balance is too low: needed ${requiredAmount}, you have ${balance}`);
+            throw new InvariantViolationError(`Token balance is too low: needed ${requiredAmount}, you have ${balance}`);
         }
     }
 }
