@@ -5,9 +5,9 @@ import BinanceClient from 'binance-api-node';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { WINSTON_MODULE } from '../logger';
 import { TokenService } from '../tokens/TokenService';
+import { TokenMetadata } from '../tokens/TokenMetadata';
 import * as Account from '../../resources/account.json';
 import * as Tokens from '../../resources/tokens.json';
-import { TokenMetadata } from '../tokens/TokenMetadata';
 
 describe('BinanceService', () => {
     let service: BinanceService;
@@ -21,9 +21,17 @@ describe('BinanceService', () => {
         expect(accountInfo.canTrade).toBeTruthy();
     });
 
-    it('should be able to deposit ZRX', async () => {
-        const tx = await service.deposit(0.001, TokenSymbol.ZRX);
-        expect(tx.hash).toBeTruthy();
+    xit('should be able to deposit ZRX', async () => {
+        const log = await service.deposit(5, TokenSymbol.ZRX, false);
+        expect(log.transactions.pop().transactionObject.hash).toBeTruthy();
+    });
+
+    it('should be able to sell ZRX', async () => {
+        await service.sell(5, TokenSymbol.ZRX, TokenSymbol.WETH);
+    });
+
+    xit('should be able to withdraw ZRX', async () => {
+        await service.withdraw(5, TokenSymbol.ZRX);
     });
 
     beforeAll(async () => {
@@ -41,7 +49,7 @@ describe('BinanceService', () => {
         });
 
         const module: TestingModule = await Test.createTestingModule({
-            imports: [ WINSTON_MODULE ],
+            imports: [WINSTON_MODULE],
             providers: [
                 TokenService,
                 BinanceService,

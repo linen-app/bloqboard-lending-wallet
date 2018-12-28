@@ -1,7 +1,5 @@
 import { Module, Inject } from '@nestjs/common';
 import { ethers } from 'ethers';
-import { format } from 'winston';
-import { WinstonModule } from 'nest-winston';
 import { CompoundController } from './compound/CompoundController';
 import { DharmaController } from './dharma/DharmaController';
 import { CompoundService } from './compound/CompoundService';
@@ -31,6 +29,7 @@ import * as Addresses from '../resources/dharma/addresses.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 import { WINSTON_MODULE } from './logger';
+import { BinanceController } from './binance/BinanceController';
 
 const NETWORK = process.env.NETWORK || 'kovan';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -86,12 +85,13 @@ const binanceClient = BinanceClient({
 });
 
 @Module({
-    imports: [ WINSTON_MODULE ],
+    imports: [WINSTON_MODULE],
     controllers: [
         CompoundController,
         KyberController,
         DharmaController,
         TokensController,
+        BinanceController,
         RootController,
     ],
     providers: [
@@ -108,6 +108,7 @@ const binanceClient = BinanceClient({
         { provide: 'bloqboard-uri', useValue: BloqboardAPI.networks[NETWORK] },
         { provide: 'currency-rates-uri', useValue: CurrencyRatesAPI.networks[NETWORK] },
         { provide: 'wallet', useValue: wallet },
+        { provide: 'address', useValue: wallet.address },
         { provide: 'tokens', useValue: tokens },
         { provide: 'signer', useValue: wallet },
         { provide: 'binance-client', useValue: binanceClient },

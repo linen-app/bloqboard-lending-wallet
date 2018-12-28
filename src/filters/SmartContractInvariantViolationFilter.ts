@@ -3,7 +3,7 @@ import { InvariantViolationError } from '../errors/SmartContractInvariantViolati
 import { BaseExceptionFilter, HTTP_SERVER_REF } from '@nestjs/core';
 
 @Catch(InvariantViolationError)
-export class SmartContractInvariantViolationFilter extends BaseExceptionFilter<InvariantViolationError> {
+export class InvariantViolationFilter extends BaseExceptionFilter<InvariantViolationError> {
     constructor(@Inject(HTTP_SERVER_REF) applicationRef: HttpServer) {
         super(applicationRef);
     }
