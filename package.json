@@ -3,7 +3,11 @@
   "version": "0.0.1",
   "description": "",
   "author": "Confirmation Labs",
-  "license": "Apache",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bloqboard/bloqboard-lending-wallet.git"
+  },
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -23,7 +27,7 @@
     "@nestjs/core": "^5.4.0",
     "@nestjs/swagger": "^2.5.1",
     "axios": "^0.18.0",
-    "binance-api-node": "^0.8.13",
+    "binance-api-node": "git+https://github.com/frostiq/binance-api-node.git#assetDetail",
     "dharma-contract-artifacts": "^1.0.4",
     "ethers": "^4.0.15",
     "moment": "^2.23.0",
