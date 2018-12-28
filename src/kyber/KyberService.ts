@@ -51,7 +51,7 @@ export class KyberService {
             transactionObject: tradeTx,
         });
 
-        this.logger.info(`Selling ${amountToSell} for ${tokenSymbolToBuy}`);
+        this.logger.info(`Selling ${amountToSell} for ${tokenSymbolToBuy} on Kyber`);
 
         if (needAwaitMining) {
             await transactions.wait();
@@ -111,7 +111,7 @@ export class KyberService {
             transactionObject: tradeTx,
         });
 
-        this.logger.info(`Buying ${amountToBuy} for ${tokenSymbolToSell}`);
+        this.logger.info(`Buying ${amountToBuy} for ${tokenSymbolToSell} on Kyber`);
 
         if (needAwaitMining) {
             await transactions.wait();

@@ -10,6 +10,7 @@ import { TokenSymbol } from '../tokens/TokenSymbol';
 import { WinstonModule } from 'nest-winston';
 import { format } from 'winston';
 import winston = require('winston');
+import { WINSTON_MODULE } from '../logger';
 
 describe('KyberService', () => {
     let kyberService: KyberService;
@@ -30,17 +31,7 @@ describe('KyberService', () => {
 
         const tokens: TokenMetadata[] = Tokens.networks[NETWORK].map(x => x as TokenMetadata);
         const module = await Test.createTestingModule({
-            imports: [WinstonModule.forRoot({
-                transports: [
-                    new winston.transports.Console({
-                        format: format.combine(
-                            format.colorize(),
-                            format.timestamp(),
-                            format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
-                        ),
-                    }),
-                ],
-            })],
+            imports: [ WINSTON_MODULE ],
             providers: [
                 TokenService,
                 KyberService,

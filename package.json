@@ -23,7 +23,7 @@
     "@nestjs/core": "^5.4.0",
     "@nestjs/swagger": "^2.5.1",
     "axios": "^0.18.0",
-    "bignumber.js": "^5.0.0",
+    "binance-api-node": "^0.8.13",
     "dharma-contract-artifacts": "^1.0.4",
     "ethers": "^4.0.15",
     "moment": "^2.23.0",

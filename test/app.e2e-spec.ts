@@ -29,6 +29,7 @@ import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json'
 import * as Addresses from '../resources/dharma/addresses.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
+import { WINSTON_MODULE } from '../src/logger';
 
 const parseBalance = (balance: number | string) => utils.parseEther(balance.toString());
 const delta = '0.0001';
@@ -143,17 +144,7 @@ describe('Compound API (e2e)', () => {
         );
 
         moduleFixture = await Test.createTestingModule({
-            imports: [WinstonModule.forRoot({
-                transports: [
-                    new winston.transports.Console({
-                        format: format.combine(
-                            format.colorize(),
-                            format.timestamp(),
-                            format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
-                        ),
-                    }),
-                ],
-            })],
+            imports: [ WINSTON_MODULE ],
             controllers: [CompoundController, TokensController],
             providers: [
                 CompoundService,

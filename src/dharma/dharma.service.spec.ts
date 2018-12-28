@@ -20,6 +20,7 @@ import { TokenSymbol } from '../tokens/TokenSymbol';
 import { DharmaOrdersFetcher } from './DharmaOrdersFetcher';
 import { MessageSigner } from './MessageSigner';
 import { Pagination } from '../common-models/Pagination';
+import { WINSTON_MODULE } from '../logger';
 
 describe('DharmaService', () => {
     let dharmaLendOffersService: DharmaLendOffersService;
@@ -67,17 +68,7 @@ describe('DharmaService', () => {
         const tokens: TokenMetadata[] = Tokens.networks[NETWORK].map(x => x as TokenMetadata);
 
         const module: TestingModule = await Test.createTestingModule({
-            imports: [WinstonModule.forRoot({
-                transports: [
-                    new winston.transports.Console({
-                        format: format.combine(
-                            format.colorize(),
-                            format.timestamp(),
-                            format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
-                        ),
-                    }),
-                ],
-            })],
+            imports: [ WINSTON_MODULE ],
             providers: [
                 TokenService,
                 DharmaDebtRequestService,

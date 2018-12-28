@@ -17,8 +17,10 @@ import { DebtOrderWrapper } from './dharma/wrappers/DebtOrderWrapper';
 import { MessageSigner } from './dharma/MessageSigner';
 import { TokensController } from './tokens/TokensController';
 import { RootController } from './root/RootController';
+import { BinanceService } from './binance/BinanceService';
 import winston = require('winston');
 import * as ContractArtifacts from 'dharma-contract-artifacts';
+import BinanceClient from 'binance-api-node';
 
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
@@ -28,6 +30,7 @@ import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json'
 import * as Addresses from '../resources/dharma/addresses.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
+import { WINSTON_MODULE } from './logger';
 
 const NETWORK = process.env.NETWORK || 'kovan';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -77,20 +80,13 @@ const collateralizedContract = new ethers.Contract(
     wallet,
 );
 
+const binanceClient = BinanceClient({
+    apiKey: 'ZKEvT2o8ztWj50mkI1psIYZoV7uWc4TmQJzfrk8CNj1HTVQg2NpNpf6BY3NtSxf0',
+    apiSecret: 'q2UEwz36yqYBLzeIsmj1lvtTKLheo7BqePa8KnVDqqE41hcEmjGnzo0hMVOcsNc2',
+});
+
 @Module({
-    imports: [
-        WinstonModule.forRoot({
-            transports: [
-                new winston.transports.Console({
-                    format: format.combine(
-                        format.colorize(),
-                        format.timestamp(),
-                        format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
-                    ),
-                }),
-            ],
-        }),
-    ],
+    imports: [ WINSTON_MODULE ],
     controllers: [
         CompoundController,
         KyberController,
@@ -108,11 +104,13 @@ const collateralizedContract = new ethers.Contract(
         DharmaOrdersFetcher,
         DebtOrderWrapper,
         MessageSigner,
+        BinanceService,
         { provide: 'bloqboard-uri', useValue: BloqboardAPI.networks[NETWORK] },
         { provide: 'currency-rates-uri', useValue: CurrencyRatesAPI.networks[NETWORK] },
         { provide: 'wallet', useValue: wallet },
         { provide: 'tokens', useValue: tokens },
         { provide: 'signer', useValue: wallet },
+        { provide: 'binance-client', useValue: binanceClient },
 
         { provide: 'dharma-kernel-address', useValue: debtKernelContract.address },
         { provide: 'creditor-proxy-address', useValue: ltvCreditorProxyContract.address },
