@@ -65,7 +65,6 @@ export class KyberService {
         tokenSymbolToBuy: TokenSymbol,
         tokenSymbolToSell: TokenSymbol,
         needAwaitMining: boolean,
-        nonce?: number,
     ): Promise<TransactionLog> {
         const amountToBuy = TokenAmount.fromHumanReadable(
             humanReadableAmount,
@@ -76,7 +75,6 @@ export class KyberService {
             amountToBuy,
             tokenSymbolToSell,
             needAwaitMining,
-            nonce,
         );
     }
 
@@ -84,16 +82,14 @@ export class KyberService {
         amountToBuy: TokenAmount,
         tokenSymbolToSell: TokenSymbol,
         needAwaitMining: boolean,
-        nonce?: number,
+        transactions: TransactionLog = new TransactionLog(),
     ): Promise<TransactionLog> {
         const tokenToSell = this.tokenService.getTokenBySymbol(tokenSymbolToSell);
         const approximateAmountToSell = await this.calcApproximateAmountToSell(amountToBuy, tokenToSell);
         const { amountToSell, rate } = await this.calcAmountToSell(amountToBuy, approximateAmountToSell);
 
-        const transactions = new TransactionLog();
-
         await this.tokenService.assertTokenBalance(amountToSell);
-        await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions, nonce);
+        await this.tokenService.addUnlockTransactionIfNeeded(tokenSymbolToSell, this.kyberContract.address, transactions);
 
         const tradeTx = await this.kyberContract.trade(
             tokenToSell.address,
@@ -133,6 +129,27 @@ export class KyberService {
         const rate: BigNumber = response.slippageRate;
         const formattedRate = Number.parseFloat(utils.formatEther(rate));
         return formattedRate;
+    }
+
+    async ensureEnoughBalance(neededBalance: TokenAmount, transactions: TransactionLog): Promise<void> {
+        const balance = await this.tokenService.getTokenBalance(neededBalance.token.symbol);
+
+        if (neededBalance.rawAmount.gt(balance.rawAmount)) {
+            let additionalTokenAmount = neededBalance.rawAmount.sub(balance.rawAmount);
+            const smallAddition = additionalTokenAmount.div(1000);
+            additionalTokenAmount = additionalTokenAmount.add(smallAddition);
+            const additionalAmount = new TokenAmount(additionalTokenAmount, neededBalance.token);
+
+            this.logger.info(`Buying additional: ${additionalAmount}`);
+
+            const kyberTxs = await this.buyTokenRawAmount(
+                additionalAmount,
+                TokenSymbol.WETH,
+                false,
+                transactions,
+            );
+            transactions.combine(kyberTxs);
+        }
     }
 
     private async calcApproximateAmountToSell(

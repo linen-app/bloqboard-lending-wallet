@@ -80,9 +80,8 @@ typings/
 
 dist/
 
-account.json
-
 .vscode/
 
 .DS_Store
 
+resources/account.*

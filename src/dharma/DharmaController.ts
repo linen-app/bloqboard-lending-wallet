@@ -139,11 +139,12 @@ export class DharmaController {
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async repayLendOffer(
         @Param('lendOfferId') lendOfferId: string,
-        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Query('amount', ParseNumberPipe) amount: number,
+        @Query('utilizeOtherTokens', ParseBooleanPipe) utilizeOtherTokens: boolean,
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<any> {
-        const result = await this.dharmaLendOffersService.repayLendOffer(lendOfferId, amount, needAwaitMining);
+        const result = await this.dharmaLendOffersService.repayLendOffer(lendOfferId, amount, utilizeOtherTokens, needAwaitMining);
         return res.status(HttpStatus.CREATED).json(result);
     }
 

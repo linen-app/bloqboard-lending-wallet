@@ -60,9 +60,9 @@ export class TokenService {
         const token = this.getTokenBySymbol(symbol);
         const contract = new Contract(token.address, ERC20.abi, this.wallet);
 
-        const tx: ContractTransaction = await contract.approve(spender, 
+        const tx: ContractTransaction = await contract.approve(spender,
             ethers.constants.MaxUint256,
-            { nonce, gasLimit: 90000 }
+            { nonce, gasLimit: 90000 },
         );
 
         this.logger.info(`Unlocking ${symbol} for spender: ${spender}`);
@@ -81,16 +81,16 @@ export class TokenService {
         return tx;
     }
 
-    async addUnlockTransactionIfNeeded(symbol: TokenSymbol, spender: Address, transactions: TransactionLog, nonce?: number) {
+    async addUnlockTransactionIfNeeded(symbol: TokenSymbol, spender: Address, transactions: TransactionLog): Promise<void> {
         if (await this.isTokenLockedForSpender(symbol, spender)) {
-            const unlockTx = await this.unlockToken(symbol, spender, nonce);
+            const unlockTx = await this.unlockToken(symbol, spender, transactions.getNextNonce());
             transactions.add({ name: 'unlock', transactionObject: unlockTx });
         }
     }
 
-    async assertTokenBalance(requiredAmount: TokenAmount){
+    async assertTokenBalance(requiredAmount: TokenAmount) {
         const balance = await this.getTokenBalance(requiredAmount.token.symbol);
-        if (requiredAmount.rawAmount.gt(balance.rawAmount)){
+        if (requiredAmount.rawAmount.gt(balance.rawAmount)) {
             throw new SmartContractInvariantViolationError(`Token balance is too low: needed ${requiredAmount}, you have ${balance}`);
         }
     }
