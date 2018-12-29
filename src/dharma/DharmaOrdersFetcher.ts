@@ -60,6 +60,10 @@ export class DharmaOrdersFetcher {
             creditorAddress: filter.creditor,
         };
 
+        for (const key in queryStringFilter) {
+            if (!queryStringFilter[key]) delete queryStringFilter[key];
+        }
+
         const params = {
             status: filter.status, ...pagination, kernelAddress, ...sorting, ...queryStringFilter,
         };

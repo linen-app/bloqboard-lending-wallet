@@ -5,6 +5,7 @@ import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse, ApiImplicitPar
 import { DharmaLendOffersService } from './DharmaLendOffersService';
 import { ParseNumberPipe } from '../parseNumber.pipe';
 import { ParseNullableNumberPipe } from '../parseNullableNumber.pipe';
+import { ParsePaginationPipe } from '../parsePagination.pipe';
 import { TokenSymbol } from '../tokens/TokenSymbol';
 import { TransactionLog } from '../common-models/TransactionLog';
 import * as Text from '../../resources/ConstantText';
@@ -34,7 +35,7 @@ export class DharmaController {
         @Query('minUsdAmount', ParseNullableNumberPipe) minUsdAmount: number,
         @Query('collateralToken') collateralToken: TokenSymbol,
         @Query('principalToken') principalToken: TokenSymbol,
-        @Query() pagination: Pagination,
+        @Query(ParsePaginationPipe) pagination: Pagination,
     ): Promise<HumanReadableDebtRequest[]> {
         pagination = { ...Pagination.default, ...pagination };
         const debtRequests = await this.dharmaLoanRequestsService.getDebtOrders(
@@ -90,7 +91,7 @@ export class DharmaController {
         @Query('minUsdAmount', ParseNullableNumberPipe) minUsdAmount: number,
         @Query('collateralToken') collateralToken: TokenSymbol,
         @Query('principalToken') principalToken: TokenSymbol,
-        @Query() pagination: Pagination,
+        @Query(ParsePaginationPipe) pagination: Pagination,
     ): Promise<HumanReadableLendOffer[]> {
         pagination = { ...Pagination.default, ...pagination };
         const offers = await this.dharmaLendOffersService.getLendOffers(pagination, principalToken, collateralToken, minUsdAmount, maxUsdAmount);

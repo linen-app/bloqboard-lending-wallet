@@ -96,7 +96,7 @@ export class CompoundController {
     async withdraw(
         @Query('token') token: TokenSymbol,
         @Query('amount', ParseNumberPipe) amount: number,
-        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true, 
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<string> {
         const result = await this.compoundService.withdraw(token, amount, needAwaitMining);
