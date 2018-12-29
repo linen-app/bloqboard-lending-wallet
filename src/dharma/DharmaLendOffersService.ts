@@ -154,13 +154,14 @@ export class DharmaLendOffersService {
             new TokenAmount(await wrappedOffer.getOutstandingRepaymentAmount(), amount.token) :
             amount;
 
-        await this.tokenService.assertTokenBalance(actualAmount);
-        await this.tokenService.addUnlockTransactionIfNeeded(actualAmount.token.symbol, this.tokenTransferProxyAddress, transactions);
-
         this.logger.info(`utilizeOtherTokens: ${utilizeOtherTokens}`);
         if (utilizeOtherTokens) {
-            await this.kyberService.ensureEnoughBalance(actualAmount, transactions);
+            await this.kyberService.ensureEnoughBalance(actualAmount, false, transactions);
+        } else {
+            await this.tokenService.assertTokenBalance(actualAmount);
         }
+
+        await this.tokenService.addUnlockTransactionIfNeeded(actualAmount.token.symbol, this.tokenTransferProxyAddress, transactions);
 
         const repayTx = await wrappedOffer.repay(
             actualAmount.rawAmount,

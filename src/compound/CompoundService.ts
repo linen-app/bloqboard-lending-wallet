@@ -119,17 +119,18 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
 
-        await this.tokenService.assertTokenBalance(tokenAmount);
-        await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
-
         const neededTokenAmount = tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ?
-            (await this.getBorrowBalance(symbol)).rawAmount :
-            tokenAmount.rawAmount;
+        new TokenAmount((await this.getBorrowBalance(symbol)).rawAmount, tokenAmount.token) :
+            tokenAmount;
 
         this.logger.info(`utilizeOtherTokens: ${utilizeOtherTokens}`);
         if (utilizeOtherTokens) {
-            await this.kyberService.ensureEnoughBalance(new TokenAmount(neededTokenAmount, tokenAmount.token), transactions);
+            await this.kyberService.ensureEnoughBalance(neededTokenAmount, true, transactions);
+        } else {
+            await this.tokenService.assertTokenBalance(neededTokenAmount);
         }
+
+        await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
             token.address,

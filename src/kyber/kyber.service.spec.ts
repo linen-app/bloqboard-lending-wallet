@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { ethers, utils } from 'ethers';
+import { ethers } from 'ethers';
 import { KyberService } from './KyberService';
 import * as Kyber from '../../resources/kyber-network-proxy.json';
 import * as Account from '../../resources/account.json';
@@ -13,11 +13,12 @@ import winston = require('winston');
 
 describe('KyberService', () => {
     let kyberService: KyberService;
+    let tokenService: TokenService;
+    const NETWORK = 'mainnet';
 
     beforeEach(async () => {
         jest.setTimeout(120000);
 
-        const NETWORK = 'kovan';
         const provider = ethers.getDefaultProvider(NETWORK);
         const privateKey = Account.privateKey;
         const wallet = new ethers.Wallet(privateKey, provider);
@@ -51,10 +52,12 @@ describe('KyberService', () => {
         }).compile();
 
         kyberService = module.get<KyberService>(KyberService);
+        tokenService = module.get<TokenService>(TokenService);
     });
 
     describe('KyberService', () => {
         it('buyToken', async () => {
+            await (await tokenService.lockToken(TokenSymbol.WETH, Kyber.networks[NETWORK].address)).wait();
             const res = await kyberService.buyToken(0.0002, TokenSymbol.REP, TokenSymbol.WETH, true);
             expect(res.transactions.pop().transactionObject.hash).toBeDefined();
         });

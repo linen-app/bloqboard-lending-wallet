@@ -131,24 +131,27 @@ export class KyberService {
         return formattedRate;
     }
 
-    async ensureEnoughBalance(neededBalance: TokenAmount, transactions: TransactionLog): Promise<void> {
+    async ensureEnoughBalance(neededBalance: TokenAmount, addSmallAmount: boolean, transactions: TransactionLog): Promise<void> {
         const balance = await this.tokenService.getTokenBalance(neededBalance.token.symbol);
 
         if (neededBalance.rawAmount.gt(balance.rawAmount)) {
             let additionalTokenAmount = neededBalance.rawAmount.sub(balance.rawAmount);
             const smallAddition = additionalTokenAmount.div(1000);
-            additionalTokenAmount = additionalTokenAmount.add(smallAddition);
+
+            if (addSmallAmount) {
+                additionalTokenAmount = additionalTokenAmount.add(smallAddition);
+            }
+
             const additionalAmount = new TokenAmount(additionalTokenAmount, neededBalance.token);
 
             this.logger.info(`Buying additional: ${additionalAmount}`);
 
-            const kyberTxs = await this.buyTokenRawAmount(
+            await this.buyTokenRawAmount(
                 additionalAmount,
                 TokenSymbol.WETH,
                 false,
                 transactions,
             );
-            transactions.combine(kyberTxs);
         }
     }
 
