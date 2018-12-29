@@ -133,17 +133,20 @@ export class DharmaController {
         title: 'Repay filled lend offers',
         description: 'Fills specified offer to lend. Unlocks collateral token if needed.',
     })
-    @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
-    @ApiImplicitQuery({ name: 'amount', description: Text.REPAY_AMOUNT })
+
     @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'utilizeOtherTokens', description: Text.UTILIZE_OTHER_CURRENCIES })
+    @ApiImplicitQuery({ name: 'amount', description: Text.REPAY_AMOUNT })
+    @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async repayLendOffer(
         @Param('lendOfferId') lendOfferId: string,
-        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Query('amount', ParseNumberPipe) amount: number,
+        @Query('utilizeOtherTokens', ParseBooleanPipe) utilizeOtherTokens: boolean,
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<any> {
-        const result = await this.dharmaLendOffersService.repayLendOffer(lendOfferId, amount, needAwaitMining);
+        const result = await this.dharmaLendOffersService.repayLendOffer(lendOfferId, amount, utilizeOtherTokens, needAwaitMining);
         return res.status(HttpStatus.CREATED).json(result);
     }
 

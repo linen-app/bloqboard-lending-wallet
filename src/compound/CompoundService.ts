@@ -67,9 +67,9 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
         const txObject: ContractTransaction = await this.moneyMarketContract.withdraw(
-            token.address, 
+            token.address,
             tokenAmount.rawAmount,
-            { gasLimit: 320000 }
+            { gasLimit: 320000 },
         );
 
         this.logger.info(`Withdrawing ${tokenAmount}`);
@@ -85,14 +85,14 @@ export class CompoundService {
             }],
         );
     }
-    
+
     async borrow(symbol: TokenSymbol, humanReadableTokenAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
         const txObject: ContractTransaction = await this.moneyMarketContract.borrow(
-            token.address, 
+            token.address,
             tokenAmount.rawAmount,
-            { gasLimit: 360000 }
+            { gasLimit: 360000 },
         );
 
         this.logger.info(`Borrowing ${tokenAmount}`);
@@ -119,32 +119,22 @@ export class CompoundService {
         const token = this.tokenService.getTokenBySymbol(symbol);
         const tokenAmount = TokenAmount.fromHumanReadable(humanReadableTokenAmount, token);
 
-        await this.tokenService.assertTokenBalance(tokenAmount);
-        await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
-
         const neededTokenAmount = tokenAmount.rawAmount.eq(ethers.constants.MaxUint256) ?
-            (await this.getBorrowBalance(symbol)).rawAmount :
-            tokenAmount.rawAmount;
+        new TokenAmount((await this.getBorrowBalance(symbol)).rawAmount, tokenAmount.token) :
+            tokenAmount;
 
-        const balance = await this.tokenService.getTokenBalance(symbol);
         this.logger.info(`utilizeOtherTokens: ${utilizeOtherTokens}`);
-        if (neededTokenAmount.gt(balance.rawAmount) && utilizeOtherTokens) {
-            let additionalTokenAmount = neededTokenAmount.sub(balance.rawAmount);
-            const smallAddition = additionalTokenAmount.div(1000);
-            additionalTokenAmount = additionalTokenAmount.add(smallAddition);
-            this.logger.info(`buying additional TokenAmount: ${additionalTokenAmount.toString()}`);
-            const kyberTxs = await this.kyberService.buyTokenRawAmount(
-                new TokenAmount(additionalTokenAmount, tokenAmount.token),
-                TokenSymbol.WETH,
-                false,
-                transactions.getNextNonce(),
-            );
-            transactions.combine(kyberTxs);
+        if (utilizeOtherTokens) {
+            await this.kyberService.ensureEnoughBalance(neededTokenAmount, true, transactions);
+        } else {
+            await this.tokenService.assertTokenBalance(neededTokenAmount);
         }
+
+        await this.tokenService.addUnlockTransactionIfNeeded(symbol, this.moneyMarketContract.address, transactions);
 
         const repayTx: ContractTransaction = await this.moneyMarketContract.repayBorrow(
             token.address,
-            tokenAmount.rawAmount,
+            tokenAmount.rawAmount, // Compound accepts MaxUint256 as parameter for repayment and withdrawals
             { nonce: transactions.getNextNonce(), gasLimit: 300000 },
         );
 

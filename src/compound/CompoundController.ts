@@ -96,7 +96,7 @@ export class CompoundController {
     async withdraw(
         @Query('token') token: TokenSymbol,
         @Query('amount', ParseNumberPipe) amount: number,
-        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true, 
+        @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,
         @Res() res,
     ): Promise<string> {
         const result = await this.compoundService.withdraw(token, amount, needAwaitMining);
@@ -127,8 +127,10 @@ export class CompoundController {
         title: 'Repay debt',
         description: 'Repay your outstanding debt to Compound protocol.',
     })
-    @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
+
     @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'utilizeOtherTokens', description: Text.UTILIZE_OTHER_CURRENCIES })
+    @ApiImplicitQuery({ name: 'token', enum: supportedTokens })
     @ApiImplicitQuery({ name: 'amount', description: Text.REPAY_AMOUNT })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async repayBorrow(

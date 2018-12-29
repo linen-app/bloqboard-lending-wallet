@@ -18,6 +18,7 @@ import { AmortizationUnit } from './models/UnpackedDebtOrderData';
 import { HumanReadableLendOffer } from './HumanReadableLendOffer';
 import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
 import { Pagination } from '../common-models/Pagination';
+import { KyberService } from 'src/kyber/KyberService';
 
 @Injectable()
 export class DharmaLendOffersService {
@@ -31,6 +32,7 @@ export class DharmaLendOffersService {
         private readonly tokenService: TokenService,
         private readonly loanAdapter: CollateralizedSimpleInterestLoanAdapter,
         private readonly debtOrderWrapperFactory: DebtOrderWrapper,
+        private readonly kyberService: KyberService,
     ) { }
 
     async getLendOffers(
@@ -136,7 +138,12 @@ export class DharmaLendOffersService {
         return transactions;
     }
 
-    async repayLendOffer(lendOfferId: string, humanReadableAmount: number, needAwaitMining: boolean): Promise<TransactionLog> {
+    async repayLendOffer(
+        lendOfferId: string,
+        humanReadableAmount: number,
+        utilizeOtherTokens: boolean,
+        needAwaitMining: boolean,
+    ): Promise<TransactionLog> {
         const transactions = new TransactionLog();
         const rawOrder = await this.ordersFetcher.fetchOrder(lendOfferId);
         const order = await this.loanAdapter.fromRelayerDebtOrder(rawOrder);
@@ -147,7 +154,13 @@ export class DharmaLendOffersService {
             new TokenAmount(await wrappedOffer.getOutstandingRepaymentAmount(), amount.token) :
             amount;
 
-        await this.tokenService.assertTokenBalance(actualAmount);
+        this.logger.info(`utilizeOtherTokens: ${utilizeOtherTokens}`);
+        if (utilizeOtherTokens) {
+            await this.kyberService.ensureEnoughBalance(actualAmount, false, transactions);
+        } else {
+            await this.tokenService.assertTokenBalance(actualAmount);
+        }
+
         await this.tokenService.addUnlockTransactionIfNeeded(actualAmount.token.symbol, this.tokenTransferProxyAddress, transactions);
 
         const repayTx = await wrappedOffer.repay(
