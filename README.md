@@ -28,7 +28,7 @@ $ npm install
 
 ## Running the app
 
-Paste a private key form your Ethereum account in `resources/account.json` file.
+Paste a private key from your Ethereum account in `resources/account.json` file.
 
 To start the app with Mainnet config, run the following command in the console:
 
