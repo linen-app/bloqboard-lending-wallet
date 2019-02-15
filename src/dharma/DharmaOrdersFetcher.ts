@@ -2,12 +2,12 @@ import { Agent } from 'https';
 import { Inject, Injectable, HttpException } from '@nestjs/common';
 import { RelayerDebtOrder, Status } from './models/RelayerDebtOrder';
 import Axios, { AxiosError } from 'axios';
-import { Address } from 'src/types';
+import { Address } from '../types';
 import { TokenService } from '../tokens/TokenService';
 import { stringify } from 'qs';
 import { Logger } from 'winston';
 import { TokenSymbol } from '../tokens/TokenSymbol';
-import { Pagination } from 'src/common-models/Pagination';
+import { Pagination } from '../common-models/Pagination';
 
 export class OrdersFilter {
     status?: Status;

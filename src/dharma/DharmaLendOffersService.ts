@@ -18,7 +18,7 @@ import { AmortizationUnit } from './models/UnpackedDebtOrderData';
 import { HumanReadableLendOffer } from './HumanReadableLendOffer';
 import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
 import { Pagination } from '../common-models/Pagination';
-import { KyberService } from 'src/kyber/KyberService';
+import { KyberService } from '../kyber/KyberService';
 
 @Injectable()
 export class DharmaLendOffersService {

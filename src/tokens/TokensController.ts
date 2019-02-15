@@ -3,9 +3,9 @@ import { ApiImplicitQuery, ApiUseTags, ApiOperation, ApiResponse } from '@nestjs
 import { TokenService } from './TokenService';
 import { TokenSymbol } from './TokenSymbol';
 import * as Text from '../../resources/ConstantText';
-import { ParseBooleanPipe } from 'src/parseBoolean.pipe';
-import { TransactionLog } from 'src/common-models/TransactionLog';
-import { ParseNumberPipe } from 'src/parseNumber.pipe';
+import { ParseBooleanPipe } from '../parseBoolean.pipe';
+import { TransactionLog } from '../common-models/TransactionLog';
+import { ParseNumberPipe } from '../parseNumber.pipe';
 import { WrappedEtherService } from './WrappedEtherService';
 import { Wallet } from 'ethers';
 import { TokenAmount } from './TokenAmount';

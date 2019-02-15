@@ -3,7 +3,7 @@ import { Injectable, PipeTransform, ArgumentMetadata, BadRequestException } from
 @Injectable()
 export class ParseBooleanPipe implements PipeTransform<string> {
     async transform(value: string, metadata: ArgumentMetadata): Promise<boolean> {
-        if (!value) return false;
+        if (!value) return undefined;
 
         const isBoolean =
             'string' === typeof value &&

@@ -10,7 +10,7 @@ import { TransactionLog } from '../common-models/TransactionLog';
 import * as Text from '../../resources/ConstantText';
 import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
 import { HumanReadableLendOffer } from './HumanReadableLendOffer';
-import { Pagination } from 'src/common-models/Pagination';
+import { Pagination } from '../common-models/Pagination';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 

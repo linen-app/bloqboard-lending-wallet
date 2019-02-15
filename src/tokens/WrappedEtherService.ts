@@ -3,7 +3,7 @@ import { ContractTransaction, Contract } from 'ethers';
 import { TokenAmount } from './TokenAmount';
 import { TokenSymbol } from './TokenSymbol';
 import { TokenService } from './TokenService';
-import { TransactionLog } from 'src/common-models/TransactionLog';
+import { TransactionLog } from '../common-models/TransactionLog';
 import { Logger } from 'winston';
 
 @Injectable()

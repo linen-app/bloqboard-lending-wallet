@@ -1,5 +1,5 @@
 import { ECDSASignature } from './ECDSASignature';
-import { Address } from 'src/types';
+import { Address } from '../../types';
 
 // A price signed by the feed operator.
 export interface Price {
