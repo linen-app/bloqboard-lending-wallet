@@ -44,7 +44,7 @@ export class KyberController {
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     @ApiImplicitQuery({ name: 'tokenToSell', enum: supportedTokens })
     @ApiImplicitQuery({ name: 'tokenToBuy', enum: supportedTokens })
-    @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     async sell(
         @Query('amountToSell', ParseNumberPipe) amountToSell: number,
         @Query('tokenToSell') tokenToSell: TokenSymbol,
@@ -65,7 +65,7 @@ export class KyberController {
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     @ApiImplicitQuery({ name: 'tokenToBuy', enum: supportedTokens })
     @ApiImplicitQuery({ name: 'tokenToSell', enum: supportedTokens })
-    @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     async buy(
         @Query('amountToBuy', ParseNumberPipe) amountToBuy: number,
         @Query('tokenToBuy') tokenToBuy: TokenSymbol,
