@@ -20,6 +20,7 @@ import { RootController } from './root/RootController';
 import winston = require('winston');
 import * as ContractArtifacts from 'dharma-contract-artifacts';
 
+import * as WrappedEther from '../resources/wrapped-ether.json';
 import * as Compound from '../resources/money-market.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
 import * as Account from '../resources/account.json';
@@ -28,6 +29,7 @@ import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json'
 import * as Addresses from '../resources/dharma/addresses.json';
 import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
+import { WrappedEtherService } from './tokens/WrappedEtherService';
 
 const NETWORK = process.env.NETWORK || 'kovan';
 const provider = ethers.getDefaultProvider(NETWORK);
@@ -35,11 +37,18 @@ const privateKey = Account.privateKey;
 const wallet = new ethers.Wallet(privateKey, provider);
 const tokens: TokenMetadata[] = Tokens.networks[NETWORK];
 
+const wrappedEtherContract = new ethers.Contract(
+    WrappedEther.networks[NETWORK].address,
+    WrappedEther.abi,
+    wallet,
+);
+
 const moneyMarketContract = new ethers.Contract(
     Compound.networks[NETWORK].address,
     Compound.abi,
     wallet,
 );
+
 const kyberContract = new ethers.Contract(
     Kyber.networks[NETWORK].address,
     Kyber.abi,
@@ -99,6 +108,7 @@ const collateralizedContract = new ethers.Contract(
         RootController,
     ],
     providers: [
+        WrappedEtherService,
         CompoundService,
         KyberService,
         TokenService,
@@ -118,6 +128,7 @@ const collateralizedContract = new ethers.Contract(
         { provide: 'creditor-proxy-address', useValue: ltvCreditorProxyContract.address },
         { provide: 'token-transfer-proxy-address', useValue: dharmaAddresses.TokenTransferProxy },
 
+        { provide: 'wrapped-ether-contract', useValue: wrappedEtherContract},
         { provide: 'dharma-kernel-contract', useValue: debtKernelContract },
         { provide: 'repayment-router-contract', useValue: repaymentRouterContract },
         { provide: 'collateralizer-contract', useValue: collateralizedContract },
