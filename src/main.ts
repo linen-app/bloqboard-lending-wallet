@@ -14,6 +14,7 @@ async function bootstrap() {
     .addTag('Dharma @ Bloqboard', 'Borrow and lend digital assets using Bloqboard lending platform and Dharma protocol')
     .addTag('Compound', 'Open-source protocol for algorithmic, efficient Money Markets on the Ethereum blockchain')
     .addTag('Kyber Network', 'Performs decentralized and instant token swaps')
+    .addTag('Maker DAO', 'Gain additional liquidity from assets so that you can lend yourself a secure and stable form of money.')
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);

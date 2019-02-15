@@ -22,7 +22,7 @@ export class WrappedEtherService{
         const token = this.tokenService.getTokenBySymbol(TokenSymbol.WETH);
         const amount = TokenAmount.fromHumanReadable(humanReadableAmount, token);
         const tx: ContractTransaction = await this.wrappedEtherContract.deposit(
-            { nonce: transactions.getNextNonce(), value: amount.rawAmount },
+            { nonce: transactions.getNextNonce(), value: amount.rawAmount, gasLimit: 800000 },
         );
 
         this.logger.info(`Wrapping ${amount.humanReadableAmount} ETH`);
@@ -48,7 +48,7 @@ export class WrappedEtherService{
         const amount = TokenAmount.fromHumanReadable(humanReadableAmount, token);
         const tx: ContractTransaction = await this.wrappedEtherContract.withdraw(
             amount.rawAmount,
-            { nonce: transactions.getNextNonce() },
+            { nonce: transactions.getNextNonce(), gasLimit: 800000 },
         );
 
         this.logger.info(`Unwrapping ${amount.humanReadableAmount} ETH`);
