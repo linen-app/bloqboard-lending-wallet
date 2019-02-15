@@ -1,0 +1,851 @@
+{
+    "networks": {
+        "mainnet": {
+            "address": "0x641b470Ab5Fe8BD2De95c2Ec9EF6c6CEf1f75b0F"
+        },
+        "kovan": {
+            "address": "0x85F66f5Ee2435bDCbE12c115bFd592462ECbDb5c"
+        }
+    },
+    "abi": [
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "cdpInfo",
+            "outputs": [
+                {
+                    "name": "borrowedDai",
+                    "type": "uint256"
+                },
+                {
+                    "name": "outstandingDai",
+                    "type": "uint256"
+                },
+                {
+                    "name": "suppliedPeth",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "pethAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "wethForPeth",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                },
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "cdpsByOwner",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bytes32"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "daiAmount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "ethAmount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "payFeeInDai",
+                    "type": "bool"
+                }
+            ],
+            "name": "repayDaiAndReturnEth",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "nextOwner",
+                    "type": "address"
+                }
+            ],
+            "name": "transferCdp",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "wethAmount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "daiAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "supplyWethAndBorrowDai",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [],
+            "name": "unpause",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "weth",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "supplyEth",
+            "outputs": [
+                {
+                    "name": "_cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "account",
+                    "type": "address"
+                }
+            ],
+            "name": "isPauser",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_owner",
+                    "type": "address"
+                }
+            ],
+            "name": "cdpsByOwnerLength",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "ethAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "returnEth",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "owner",
+                    "type": "address"
+                }
+            ],
+            "name": "registerCdp",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "daiAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "supplyEthAndBorrowDai",
+            "outputs": [],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "paused",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "dex",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [],
+            "name": "renouncePauser",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "daiAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "borrowDai",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "peth",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "systemParameters",
+            "outputs": [
+                {
+                    "name": "liquidationRatio",
+                    "type": "uint256"
+                },
+                {
+                    "name": "annualStabilityFee",
+                    "type": "uint256"
+                },
+                {
+                    "name": "daiAvailable",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "mkr",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "account",
+                    "type": "address"
+                }
+            ],
+            "name": "addPauser",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "daiAmount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "payFeeInDai",
+                    "type": "bool"
+                }
+            ],
+            "name": "repayDai",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [],
+            "name": "pause",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "saiTub",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "cdpOwner",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "wethAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "supplyWeth",
+            "outputs": [
+                {
+                    "name": "_cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "wethAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "returnWeth",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "daiAmount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "wethAmount",
+                    "type": "uint256"
+                },
+                {
+                    "name": "payFeeInDai",
+                    "type": "bool"
+                }
+            ],
+            "name": "repayDaiAndReturnWeth",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "name": "payFeeInDai",
+                    "type": "bool"
+                }
+            ],
+            "name": "closeCdp",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "wethAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "pethForWeth",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "ejectCdp",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "dai",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "name": "_saiTub",
+                    "type": "address"
+                },
+                {
+                    "name": "_dex",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        },
+        {
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "fallback"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "CdpOpened",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "CdpClosed",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": false,
+                    "name": "wethAmount",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": false,
+                    "name": "pethAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "CollateralSupplied",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": false,
+                    "name": "amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "DaiBorrowed",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": false,
+                    "name": "amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "DaiRepaid",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": false,
+                    "name": "wethAmount",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": false,
+                    "name": "pethAmount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "CollateralReturned",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "oldOwner",
+                    "type": "address"
+                },
+                {
+                    "indexed": true,
+                    "name": "newOwner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "CdpTransferred",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "newOwner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "CdpEjected",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "newOwner",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "name": "cdpId",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "CdpRegistered",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "name": "account",
+                    "type": "address"
+                }
+            ],
+            "name": "Paused",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "name": "account",
+                    "type": "address"
+                }
+            ],
+            "name": "Unpaused",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "account",
+                    "type": "address"
+                }
+            ],
+            "name": "PauserAdded",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "account",
+                    "type": "address"
+                }
+            ],
+            "name": "PauserRemoved",
+            "type": "event"
+        }
+    ]
+}

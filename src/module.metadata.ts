@@ -21,6 +21,7 @@ import * as ContractArtifacts from 'dharma-contract-artifacts';
 
 import * as WrappedEther from '../resources/wrapped-ether.json';
 import * as Compound from '../resources/money-market.json';
+import * as MakerDaoContract from '../resources/makerdao-gateway.json';
 import * as Kyber from '../resources/kyber-network-proxy.json';
 import * as Tokens from '../resources/tokens.json';
 import * as LtvCreditorProxyAbi from '../resources/dharma/creditorProxyAbi.json';
@@ -29,6 +30,8 @@ import * as BloqboardAPI from '../resources/dharma/bloqboard-api.json';
 import * as CurrencyRatesAPI from '../resources/dharma/currency-rates-api.json';
 import { WrappedEtherService } from './tokens/WrappedEtherService';
 import { ModuleMetadata } from '@nestjs/common/interfaces';
+import { MakerDaoService } from './makerdao/MakerDaoService';
+import { MakerDaoController } from './makerdao/MakerDaoController';
 
 export function getModuleMetadata(wallet: Wallet, network: string): ModuleMetadata {
     const tokens: TokenMetadata[] = Tokens.networks[network];
@@ -42,6 +45,12 @@ export function getModuleMetadata(wallet: Wallet, network: string): ModuleMetada
     const moneyMarketContract = new ethers.Contract(
         Compound.networks[network].address,
         Compound.abi,
+        wallet,
+    );
+
+    const makerDaoContract = new ethers.Contract(
+        MakerDaoContract.networks[network].address,
+        MakerDaoContract.abi,
         wallet,
     );
 
@@ -100,6 +109,7 @@ export function getModuleMetadata(wallet: Wallet, network: string): ModuleMetada
             CompoundController,
             KyberController,
             DharmaController,
+            MakerDaoController,
             TokensController,
             RootController,
         ],
@@ -110,6 +120,7 @@ export function getModuleMetadata(wallet: Wallet, network: string): ModuleMetada
             TokenService,
             DharmaDebtRequestService,
             DharmaLendOffersService,
+            MakerDaoService,
             CollateralizedSimpleInterestLoanAdapter,
             DharmaOrdersFetcher,
             DebtOrderWrapper,
@@ -132,6 +143,7 @@ export function getModuleMetadata(wallet: Wallet, network: string): ModuleMetada
             { provide: 'ltv-creditor-proxy-contract', useValue: ltvCreditorProxyContract },
             { provide: 'money-market-contract', useValue: moneyMarketContract },
             { provide: 'kyber-contract', useValue: kyberContract },
+            { provide: 'makerdao-contract', useValue: makerDaoContract },
         ],
     };
 }
