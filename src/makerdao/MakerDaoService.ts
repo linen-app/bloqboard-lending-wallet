@@ -101,7 +101,7 @@ export class MakerDaoService {
             daiAmount.rawAmount,
             wethAmount.rawAmount,
             true,
-            { nonce: transactions.getNextNonce(), gasLimit: 543270 },
+            { nonce: transactions.getNextNonce(), gasLimit: 768759 },
         );
 
         this.logger.info(`Repaying ${daiAmount} and withdrawing ${wethAmount}`);
