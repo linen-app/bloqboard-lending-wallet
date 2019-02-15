@@ -7,7 +7,7 @@ import { unpackParameters } from './models/CollateralizedTermsContractParameters
 import { TokenAmount } from '../tokens/TokenAmount';
 import { TokenService } from '../tokens/TokenService';
 import { BigNumber } from 'ethers/utils';
-import { Address } from 'src/types';
+import { Address } from '../types';
 
 @Injectable()
 export class CollateralizedSimpleInterestLoanAdapter {

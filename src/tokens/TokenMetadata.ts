@@ -1,4 +1,4 @@
-import { Address } from 'src/types';
+import { Address } from '../types';
 import { TokenSymbol } from './TokenSymbol';
 export class TokenMetadata {
     address: Address;

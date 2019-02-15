@@ -1,5 +1,5 @@
 import { ECDSASignature } from './ECDSASignature';
-import { Address } from 'src/types';
+import { Address } from '../../types';
 import { TokenAmount } from '../../tokens/TokenAmount';
 import { BigNumber } from 'ethers/utils';
 

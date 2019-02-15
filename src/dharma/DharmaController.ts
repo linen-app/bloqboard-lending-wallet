@@ -10,7 +10,7 @@ import { TransactionLog } from '../common-models/TransactionLog';
 import * as Text from '../../resources/ConstantText';
 import { HumanReadableDebtRequest } from './HumanReadableDebtRequest';
 import { HumanReadableLendOffer } from './HumanReadableLendOffer';
-import { Pagination } from 'src/common-models/Pagination';
+import { Pagination } from '../common-models/Pagination';
 
 const supportedTokens: TokenSymbol[] = [TokenSymbol.WETH, TokenSymbol.DAI, TokenSymbol.ZRX, TokenSymbol.REP, TokenSymbol.BAT];
 
@@ -67,7 +67,7 @@ export class DharmaController {
         description: 'Fills specified debt request. Automatically unlocks principal token if needed.',
     })
     @ApiImplicitParam({ name: 'debtRequestId', description: 'debt request ID from Bloqboard API' })
-    @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async fillDebtRequest(
         @Param('debtRequestId') debtRequestId: string,
@@ -117,7 +117,7 @@ export class DharmaController {
         description: 'Fills specified offer to lend. Automatically unlocks collateral token if needed.',
     })
     @ApiImplicitParam({ name: 'lendOfferId', description: 'lend offer ID from Bloqboard API' })
-    @ApiImplicitQuery({ name: 'needAwaitMining', description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     async fillLendOffer(
         @Param('lendOfferId') lendOfferId: string,
