@@ -19,7 +19,7 @@ This solution is provided without any warranties and it may contain bugs. Users 
 ## Prerequisites
 1. Install [Node.js](https://nodejs.org/en/) on your machine (tested with v8.10.0)
 2. [Create an Ethereum account](https://www.myetherwallet.com/) or use existing
-3. Transfer some tokens to this account. Currently supported tokens: WETH, DAI, ZRX, REP and BAT
+3. Transfer some ETH and tokens to this account. Currently supported tokens: WETH, DAI, ZRX, REP and BAT
 4. Extract private key from your Ethereum account. This can be done on myetherwallet.com for example
 
 ## Installation
