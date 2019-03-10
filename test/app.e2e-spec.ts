@@ -9,11 +9,12 @@ import { TokenSymbol } from '../src/tokens/TokenSymbol';
 import { getModuleMetadata } from '../src/module.metadata';
 
 import * as Account from '../resources/account.json';
+import { WrappedEtherService } from '../src/tokens/WrappedEtherService';
 
 const parseBalance = (balance: number | string) => utils.parseEther(balance.toString());
 const delta = '0.0001';
 
-describe('Compound API (e2e)', () => {
+describe('API (e2e)', () => {
     let app: INestApplication;
     let moduleFixture: TestingModule;
 
@@ -83,5 +84,8 @@ describe('Compound API (e2e)', () => {
 
         app = moduleFixture.createNestApplication();
         await app.init();
+
+        const wethService = moduleFixture.get<WrappedEtherService>(WrappedEtherService);
+        await wethService.wrapEth(+delta, true);
     });
 });
