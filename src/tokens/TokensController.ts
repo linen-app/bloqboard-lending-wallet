@@ -67,6 +67,7 @@ export class TokensController {
     })
     @ApiResponse({ status: HttpStatus.CREATED, type: TransactionLog })
     @ApiImplicitQuery({ name: 'needAwaitMining', required: false, description: Text.NEED_AWAIT_MINING })
+    @ApiImplicitQuery({ name: 'amount', description: '"-1" will unwrap all balance' })
     async unwrap(
         @Query('amount', ParseNumberPipe) amount: number,
         @Query('needAwaitMining', ParseBooleanPipe) needAwaitMining: boolean = true,

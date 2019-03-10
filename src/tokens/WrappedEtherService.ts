@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ContractTransaction, Contract } from 'ethers';
+import { ContractTransaction, Contract, constants } from 'ethers';
 import { TokenAmount } from './TokenAmount';
 import { TokenSymbol } from './TokenSymbol';
 import { TokenService } from './TokenService';
@@ -46,12 +46,17 @@ export class WrappedEtherService{
     ): Promise<TransactionLog> {
         const token = this.tokenService.getTokenBySymbol(TokenSymbol.WETH);
         const amount = TokenAmount.fromHumanReadable(humanReadableAmount, token);
+
+        const actualAmount = amount.rawAmount.eq(constants.MaxUint256) ?
+            await this.tokenService.getTokenBalance(TokenSymbol.WETH) :
+            amount;
+
         const tx: ContractTransaction = await this.wrappedEtherContract.withdraw(
-            amount.rawAmount,
+            actualAmount.rawAmount,
             { nonce: transactions.getNextNonce(), gasLimit: 800000 },
         );
 
-        this.logger.info(`Unwrapping ${amount.humanReadableAmount} ETH`);
+        this.logger.info(`Unwrapping ${actualAmount.humanReadableAmount} ETH`);
 
         transactions.add({
             name: 'unwrap',
